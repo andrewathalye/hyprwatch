@@ -1,0 +1,46 @@
+{
+  "nodes": {
+    "nix-ada": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1718815202,
+        "narHash": "sha256-e1VD698TtB/gNaaU2WVf4LxNx6ueNgFKceH/Q3dsf7o=",
+        "owner": "andrewathalye",
+        "repo": "nix-ada",
+        "rev": "4f297668d96d3823bd207fb0bd000fb3dc28b69d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "andrewathalye",
+        "ref": "master",
+        "repo": "nix-ada",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1718208800,
+        "narHash": "sha256-US1tAChvPxT52RV8GksWZS415tTS7PV42KTc2PNDBmc=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "cc54fb41d13736e92229c21627ea4f22199fee6b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "cc54fb41d13736e92229c21627ea4f22199fee6b",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nix-ada": "nix-ada"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
