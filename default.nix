@@ -10,7 +10,7 @@
 
 stdenv.mkDerivation {
    pname = "hyprwatch";
-   version = "git";
+   version = "1.0";
    src = ./.;
    
    nativeBuildInputs = [

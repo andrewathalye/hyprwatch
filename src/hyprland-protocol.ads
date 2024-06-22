@@ -1,5 +1,4 @@
 with Ada.Strings.Unbounded;
-with Ada.Containers.Ordered_Maps;
 
 private with GNAT.Sockets;
 
@@ -16,16 +15,16 @@ package Hyprland.Protocol is
    ------------------
    --  Exceptions  --
    ------------------
-   Socket_Not_Found : exception;
+   Socket_Not_Found   : exception;
    Invalid_Connection : exception;
-   
+
    -------------
    --  Types  --
    -------------
    type Hyprland_Connection is limited private;
    --  The base Hyprland object. `Connect` to the compositor to use it and
    --  `Disconnect` when done.
-   
+
    type Hypr2_Message is record
       Msg_Id   : Hypr2_Message_Id;
       Msg_Body : Ada.Strings.Unbounded.Unbounded_String;
@@ -49,13 +48,13 @@ package Hyprland.Protocol is
    function Has_Messages (Hypr : in out Hyprland_Connection) return Boolean;
    --  Blocks for 100 msec and checks whether any messages are available.
 
-   function Receive_Message (Hypr : in out Hyprland_Connection) return Hypr2_Message;
+   function Receive_Message
+     (Hypr : in out Hyprland_Connection) return Hypr2_Message;
    --  Reads a message from the Hyprland connection (blocking).
 
    function Send_Message
-     (Hypr : in out Hyprland_Connection;
-      Id : Hypr1_Message_Id;
-      Arguments : String := "") return String;
+     (Hypr      : in out Hyprland_Connection; Id : Hypr1_Message_Id;
+      Arguments :        String := "") return String;
    --  Sends a message to Hyprland (synchronous, blocking)
    --  Returns Hypr1's response
 private

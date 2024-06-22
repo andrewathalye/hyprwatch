@@ -9,7 +9,7 @@ project hyprwatch is
    for Main use ("hyprwatch.adb");
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-g", "-Og");
+      for Default_Switches ("Ada") use ("-g", "-Og", "-gnatwa", "-gnatVa", "-gnatyy");
    end Compiler;
 
    package Binder is
