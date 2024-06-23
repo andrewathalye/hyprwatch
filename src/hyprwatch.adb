@@ -23,10 +23,10 @@ procedure hyprwatch is
    Hypr_State   : aliased Hyprland.State.Hyprland_State;
 
    --  Glib
-   package Hypr_Sources is new Glib_Helpers.GIO_Sources
-      (Hyprland.State.Hyprland_State);
+   function Hypr_Add_Watch is new Glib.IOChannel.Generic_Add_Watch
+     (Hyprland.State.Hyprland_State);
+
    Hypr_Channel : Glib.IOChannel.Giochannel;
-   Hypr_Watch : Glib.Main.G_Source;
    Discard : Glib.Main.G_Source_Id;
 begin
    --  Enable printing detailed stack traces
@@ -53,16 +53,11 @@ begin
       Glib.Gint (Hyprland.Protocol.File_Descriptor
             (Hypr_State.Connection.all)));
 
-   Hypr_Watch := Glib.IOChannel.Io_Create_Watch
+   Discard := Hypr_Add_Watch
      (Channel => Hypr_Channel,
-      Condition => Glib.IOChannel.G_Io_In);
-
-   Hypr_Sources.Set_Callback
-     (Source => Hypr_Watch,
-      Func   => Glib_Helpers.Hypr_Source_Callback'Access,
-      Data   => Hypr_State'Unchecked_Access);
-
-   Discard := Glib.Main.Attach (Hypr_Watch);
+      Condition => Glib.IOChannel.G_Io_In,
+      Callback => Glib_Helpers.Hypr_Source_Callback'Access,
+      Data => Hypr_State'Unchecked_Access);
 
    --  Main Loop
    D_Bus.G_Main.Start;
