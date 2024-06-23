@@ -9,7 +9,9 @@ with GNAT.Traceback.Symbolic;
 with D_Bus.G_Main;
 
 with Glib.Main;
+with Glib.IOChannel;
 
+with Hyprland.Protocol;
 with Hyprland.State;
 
 with D_Bus_Helpers;
@@ -21,8 +23,10 @@ procedure hyprwatch is
    Hypr_State   : aliased Hyprland.State.Hyprland_State;
 
    --  Glib
-   package Hypr_Sources is new Glib.Main.Generic_Sources
-      (Hyprland.State.Hyprland_State_Access);
+   package Hypr_Sources is new Glib_Helpers.GIO_Sources
+      (Hyprland.State.Hyprland_State);
+   Hypr_Channel : Glib.IOChannel.Giochannel;
+   Hypr_Watch : Glib.Main.G_Source;
    Discard : Glib.Main.G_Source_Id;
 begin
    --  Enable printing detailed stack traces
@@ -45,9 +49,20 @@ begin
       Hypr_State'Unchecked_Access);
 
    --  Glib
-   Discard := Hypr_Sources.Idle_Add (
-      Glib_Helpers.Hypr_Source'Access,
-      Hypr_State'Unchecked_Access);
+   Hypr_Channel := Glib.IOChannel.Giochannel_Unix_New (
+      Glib.Gint (Hyprland.Protocol.File_Descriptor
+            (Hypr_State.Connection.all)));
+
+   Hypr_Watch := Glib.IOChannel.Io_Create_Watch
+     (Channel => Hypr_Channel,
+      Condition => Glib.IOChannel.G_Io_In);
+
+   Hypr_Sources.Set_Callback
+     (Source => Hypr_Watch,
+      Func   => Glib_Helpers.Hypr_Source_Callback'Access,
+      Data   => Hypr_State'Unchecked_Access);
+
+   Discard := Glib.Main.Attach (Hypr_Watch);
 
    --  Main Loop
    D_Bus.G_Main.Start;

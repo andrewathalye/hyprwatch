@@ -8,6 +8,7 @@ nix-ada.pkgs.mkShell {
       nix-ada.libadalang-tools
       nix-ada.ada-language-server
       nix-ada.pkgs.nodejs
+      nix-ada.pkgs.gdb
    ];
       
    buildInputs = [

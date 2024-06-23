@@ -45,6 +45,13 @@ package Hyprland.Protocol is
    --  up all relevant data. The connection is invalid after
    --  this point.
 
+   function File_Descriptor (Hypr : Hyprland_Connection) return Integer;
+   --  Returns the file descriptor associated with an open Hyprland
+   --  compositor connection. This can be used to, for example, poll
+   --  for updates externally.
+   --
+   --  Writing to the provided file descriptor is undefined behaviour.
+
    function Has_Messages (Hypr : in out Hyprland_Connection) return Boolean;
    --  Returns whether any messages are available on the `Hyprland_Connection`.
 

@@ -214,6 +214,14 @@ package body Hyprland.State is
       State := Blank_State;
    end Disconnect;
 
+   ----------------
+   -- Connection --
+   ----------------
+   function Connection
+     (State : in out Hyprland_State)
+      return access Hyprland.Protocol.Hyprland_Connection
+   is (State.Connection);
+
    ------------
    -- Update --
    ------------

@@ -1,4 +1,4 @@
-pragma Ada_2012;
+pragma Ada_2022;
 
 with Ada.Text_IO;
 with Ada.Directories;
@@ -89,6 +89,17 @@ package body Hyprland.Protocol is
       GNAT.Sockets.Close_Socket (Hypr.Socket2);
       GNAT.Sockets.Close_Selector (Hypr.Selector);
    end Disconnect;
+
+   ---------------------
+   -- File_Descriptor --
+   ---------------------
+   function File_Descriptor
+      (Hypr : Hyprland_Connection) return Integer
+   is
+   begin
+      Assert_Valid (Hypr);
+      return GNAT.Sockets.To_C (Hypr.Socket2);
+   end File_Descriptor;
 
    ------------------
    -- Has_Messages --

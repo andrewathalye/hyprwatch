@@ -93,6 +93,14 @@ package Hyprland.State is
    procedure Disconnect (State : in out Hyprland_State);
    --  Disconnect from a Hyprland instance and destroy state information.
 
+   function Connection
+     (State : in out Hyprland_State)
+      return access Hyprland.Protocol.Hyprland_Connection;
+   --  Return the underlying connection.
+   --  Note that any modification of this connection might result
+   --  in undefined behaviour should `Hyprland.State` continue
+   --  to be used.
+
    function Update (State : in out Hyprland_State) return Boolean;
    --  Update a `Hyprland_State` object using fresh data from the compositor.
    --  The return value indicates whether any fields were updated.
