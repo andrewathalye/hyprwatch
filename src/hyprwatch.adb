@@ -53,6 +53,11 @@ begin
       Glib.Gint (Hyprland.Protocol.File_Descriptor
             (Hypr_State.Connection.all)));
 
+   --  Note: Had we used Glib.IOChannel.Create_Watch, the resulting
+   --  G_Source would have required a non-existent GIO_Source_Func type
+   --  as its callback. Using Add_Watch is less convenient but avoids
+   --  a full reimplementation of Glib.Main.Generic_Sources for a new
+   --  callback type since Ada doesn’t have generic function prototypes.
    Discard := Hypr_Add_Watch
      (Channel => Hypr_Channel,
       Condition => Glib.IOChannel.G_Io_In,
