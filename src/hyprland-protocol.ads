@@ -46,7 +46,7 @@ package Hyprland.Protocol is
    --  this point.
 
    function Has_Messages (Hypr : in out Hyprland_Connection) return Boolean;
-   --  Blocks for 100 msec and checks whether any messages are available.
+   --  Returns whether any messages are available on the `Hyprland_Connection`.
 
    function Receive_Message
      (Hypr : in out Hyprland_Connection) return Hypr2_Message;

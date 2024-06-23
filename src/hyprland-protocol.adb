@@ -108,8 +108,11 @@ package body Hyprland.Protocol is
       GNAT.Sockets.Set (Read_Socket_Set, Hypr.Socket2);
 
       GNAT.Sockets.Check_Selector
-        (Selector     => Hypr.Selector, R_Socket_Set => Read_Socket_Set,
-         W_Socket_Set => Write_Socket_Set, Status => Status, Timeout => 0.1);
+        (Selector     => Hypr.Selector,
+         R_Socket_Set => Read_Socket_Set,
+         W_Socket_Set => Write_Socket_Set,
+         Status => Status,
+         Timeout => GNAT.Sockets.Immediate);
 
       return Status = Completed;
    end Has_Messages;

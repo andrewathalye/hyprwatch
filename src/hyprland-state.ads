@@ -8,7 +8,7 @@ use type Hyprland.State_Impl.Hyprland_Window_Id;
 use type Hyprland.State_Impl.Hyprland_Workspace_Id;
 
 package Hyprland.State is
-   --  A high-level interface to the Hyprland compositor’s IPC.
+   --  A high-level interface to the Hyprland compositor's IPC.
    --  This is preferred to `Hyprland.Protocol`, which allows direct
    --  control over the relevant protocol details.
 
@@ -61,6 +61,7 @@ package Hyprland.State is
    subtype Hyprland_Workspace_List is Hyprland_Workspace_Lists.Map;
 
    type Hyprland_State is tagged private;
+   type Hyprland_State_Access is access all Hyprland_State;
 
    -------------------------
    --  Validity Checking  --
@@ -95,7 +96,6 @@ package Hyprland.State is
    function Update (State : in out Hyprland_State) return Boolean;
    --  Update a `Hyprland_State` object using fresh data from the compositor.
    --  The return value indicates whether any fields were updated.
-   --  This is a >=100ms and will return False if no updates were found.
 
    procedure Move_Window
      (State       : in out Hyprland_State; Window : Hyprland_Window_Id;

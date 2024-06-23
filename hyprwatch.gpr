@@ -1,5 +1,6 @@
 with "dbusada";
 with "gnatcoll";
+with "gtkada";
 
 project hyprwatch is
 

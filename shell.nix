@@ -10,5 +10,9 @@ nix-ada.pkgs.mkShell {
       nix-ada.pkgs.nodejs
    ];
       
-   buildInputs = [ nix-ada.dbus-ada nix-ada.pkgs.gnatcoll-core ];
+   buildInputs = [
+      nix-ada.dbus-ada
+      nix-ada.gtkada
+      nix-ada.pkgs.gnatcoll-core
+   ];
 }

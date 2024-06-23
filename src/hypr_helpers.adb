@@ -5,7 +5,7 @@ with Interfaces;
 
 with Hyprland.State_Impl;
 
-package body Helpers is
+package body Hypr_Helpers is
    function Not_Negative
      (Workspace : Hyprland.State.Hyprland_Workspace_Id) return Boolean is
      (Integer'Value (Hyprland.State_Impl.Image (Workspace)) >= 0);
@@ -107,7 +107,7 @@ package body Helpers is
 
          --  Take 'workspace' from the generic focused workspace
          Result.Set_Field
-           ("workspace", Helpers.Transform (State.Active_Workspace));
+           ("workspace", Hypr_Helpers.Transform (State.Active_Workspace));
       else
          Active_Window := State.Windows.Element (State.Active_Window);
          Result.Set_Field ("class", Active_Window.Class);
@@ -116,12 +116,12 @@ package body Helpers is
          --  Take 'workspace' from the currently-focused window
          --  (more accurate)
          Result.Set_Field
-           ("workspace", Helpers.Transform (Active_Window.Workspace));
+           ("workspace", Hypr_Helpers.Transform (Active_Window.Workspace));
       end if;
 
       Result.Set_Field
-        ("workspaces", Helpers.Generate_Workspace_String (State));
+        ("workspaces", Hypr_Helpers.Generate_Workspace_String (State));
 
       return Result;
    end Generate_Status_JSON;
-end Helpers;
+end Hypr_Helpers;
