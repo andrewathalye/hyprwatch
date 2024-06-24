@@ -1,9 +1,11 @@
 pragma Ada_2022;
 
-with Ada.Text_IO;
 with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Characters.Handling;
+with Ada.Streams.Stream_IO;
+
+with Debug; use Debug;
 
 package body Hyprland.Protocol is
    function "+"
@@ -171,7 +173,6 @@ package body Hyprland.Protocol is
    is
       pragma Unreferenced (Hypr);
 
-      use Ada.Text_IO;
       use GNAT.Sockets;
 
       Buf : Ada.Strings.Unbounded.Unbounded_String;
@@ -197,7 +198,7 @@ package body Hyprland.Protocol is
          Ada.Strings.Unbounded.Append (Buf, " " & Arguments);
       end if;
 
-      Put_Line (Standard_Error, +Buf);
+      Put_Debug (+Buf);
 
       --  Send command
       String'Write (Stream, +Buf);
@@ -213,7 +214,7 @@ package body Hyprland.Protocol is
             Ada.Strings.Unbounded.Append (Buf, C);
          end loop;
       exception
-         when End_Error =>
+         when Ada.Streams.Stream_IO.End_Error =>
             null;
          --  This is expected as Hyprland doesn’t give us an EOF indicator
       end;

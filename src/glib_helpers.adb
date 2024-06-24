@@ -17,13 +17,14 @@ package body Glib_Helpers is
       pragma Unreferenced (Source);
       pragma Unreferenced (Condition);
 
+      use Ada.Text_IO;
+
       Has_Updates : Boolean;
    begin
       Has_Updates := Data.Update;
 
       if Has_Updates then
-         Ada.Text_IO.Put_Line
-           (Hypr_Helpers.Generate_Status_JSON (Data.all).Write);
+         Put_Line (Hypr_Helpers.Generate_Status_JSON (Data.all).Write);
       end if;
 
       return Glib.Gboolean (1);

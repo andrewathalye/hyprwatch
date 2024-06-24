@@ -18,6 +18,8 @@ with D_Bus_Helpers;
 with Glib_Helpers;
 with Hypr_Helpers;
 
+with Debug; use Debug;
+
 procedure hyprwatch is
    --  Hyprland
    Hypr_State : aliased Hyprland.State.Hyprland_State;
@@ -34,7 +36,7 @@ begin
    GNAT.Exception_Traces.Set_Trace_Decorator
      (GNAT.Traceback.Symbolic.Symbolic_Traceback'Access);
 
-   Put_Line (Standard_Error, "Starting hyprwatch");
+   Put_Debug ("Starting hyprwatch");
 
    --  Hyprland
    Hypr_State.Connect;

@@ -1,5 +1,4 @@
 with Ada.Strings.Unbounded;
-with Ada.Text_IO;
 
 with D_Bus.Messages;
 with D_Bus.Connection.G_Main;
@@ -10,6 +9,7 @@ use type D_Bus.Types.Obj_Path;
 
 with Hypr_Helpers;
 with Hyprland.State_Impl;
+with Debug; use Debug;
 
 package body D_Bus_Helpers is
    ---------------
@@ -114,13 +114,11 @@ package body D_Bus_Helpers is
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type)
    is
-      use Ada.Text_IO;
-
       Request_Signature : constant String := Get_Signature (Request);
 
       List : D_Bus.Arguments.Containers.Array_Type;
    begin
-      Put_Line (Standard_Error, "Get_Workspaces " & Request_Signature);
+      Put_Debug ("Get_Workspaces " & Request_Signature);
 
       --  Check Signature
       if Request_Signature /= Get_Workspaces_In then
@@ -154,7 +152,6 @@ package body D_Bus_Helpers is
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type)
    is
-      use Ada.Text_IO;
       use all type Hypr_Helpers.Hyprland_Direction;
 
       Request_Signature : constant String := Get_Signature (Request);
@@ -165,8 +162,7 @@ package body D_Bus_Helpers is
 
       Ada_Direction : Hypr_Helpers.Hyprland_Direction;
    begin
-      Put_Line
-        (Standard_Error, "Activate_Workspace_Rel: " & Request_Signature);
+      Put_Debug ("Activate_Workspace_Rel: " & Request_Signature);
 
       --  Check signature
       if Request_Signature /= Activate_Workspace_Rel_In then
@@ -208,7 +204,6 @@ package body D_Bus_Helpers is
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type)
    is
-      use Ada.Text_IO;
       use type Hyprland.State.Hyprland_Window_Id;
       use all type Hypr_Helpers.Hyprland_Direction;
 
@@ -222,7 +217,7 @@ package body D_Bus_Helpers is
       Ada_Window    : Hyprland.State.Hyprland_Window_Id;
       Ada_Direction : Hypr_Helpers.Hyprland_Direction;
    begin
-      Put_Line (Standard_Error, "Move_Window: " & Request_Signature);
+      Put_Debug ("Move_Window: " & Request_Signature);
 
       --  Check signature
       if Request_Signature /= Move_Window_In then
@@ -242,7 +237,17 @@ package body D_Bus_Helpers is
 
       if Ada_Window = Hyprland.State.No_Window then
          Ada_Window := Global_Service.State.Active_Window;
-         --  TODO handle logic if there is no active window either...
+
+         --  If there was no active window either
+         if Ada_Window = Hyprland.State.No_Window then
+            Reply :=
+              D_Bus.Messages.New_Error
+                (Reply_To      => Request, Error_Name => Arguments_Error,
+                 Error_Message =>
+                   "A null Window Address was provided and no window" &
+                   " is selected.");
+            return;
+         end if;
       end if;
 
       Ada_Direction := To_Direction (Direction);

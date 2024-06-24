@@ -1,10 +1,11 @@
 pragma Ada_2022;
 
 with Ada.Unchecked_Deallocation;
-with Ada.Text_IO; use Ada.Text_IO;
 
 with GNATCOLL.JSON;
 with Hyprland.State;
+
+with Debug; use Debug;
 
 package body Hyprland.State is
    --  Intentionally blank Hyprland_State
@@ -239,7 +240,7 @@ package body Hyprland.State is
       while Protocol.Has_Messages (State.Connection.all) loop
          Msg := Protocol.Receive_Message (State.Connection.all);
 
-         Put_Line (Standard_Error, Msg.Msg_Id'Image & ": " & (+Msg.Msg_Body));
+         Put_Debug (Msg.Msg_Id'Image & ": " & (+Msg.Msg_Body));
 
          Updated := True;
          case Msg.Msg_Id is
