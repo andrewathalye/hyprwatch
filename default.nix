@@ -6,6 +6,8 @@
 
 # Deps
 , dbus-ada
+, gnatcoll-core
+, gtkada
 }:
 
 stdenv.mkDerivation {
@@ -20,6 +22,8 @@ stdenv.mkDerivation {
 
    buildInputs = [
       dbus-ada
+      gnatcoll-core
+      gtkada
    ];
 
    buildPhase = ''
@@ -29,6 +33,6 @@ stdenv.mkDerivation {
    '';
 
    installPhase = ''
-      gprinstall -p --prefix=$out
+      gprinstall -m -p -Phyprwatch --prefix=$out --mode=usage --no-project --no-manifest
    '';
 }
