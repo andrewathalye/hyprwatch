@@ -128,6 +128,19 @@ package body Hypr_Helpers is
       end if;
    end Transform;
 
+   function Truncate
+     (U : Ada.Strings.Unbounded.Unbounded_String)
+      return Ada.Strings.Unbounded.Unbounded_String
+   is
+      use Ada.Strings.Unbounded;
+   begin
+      if Length (U) > 100 then
+         return Unbounded_Slice (U, 1, 100);
+      else
+         return U;
+      end if;
+   end Truncate;
+
    function Generate_Status_JSON
      (State : Hyprland.State.Hyprland_State) return GNATCOLL.JSON.JSON_Value
    is
@@ -153,7 +166,7 @@ package body Hypr_Helpers is
       else
          Active_Window := State.Windows.Element (State.Active_Window);
          Result.Set_Field ("class", Active_Window.Class);
-         Result.Set_Field ("title", Active_Window.Title);
+         Result.Set_Field ("title", Truncate (Active_Window.Title));
 
          --  Take 'workspace' from the currently-focused window
          --  (more accurate)
