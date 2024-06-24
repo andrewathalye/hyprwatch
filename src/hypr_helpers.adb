@@ -130,6 +130,9 @@ package body Hypr_Helpers is
 
    function Truncate
      (U : Ada.Strings.Unbounded.Unbounded_String)
+      return Ada.Strings.Unbounded.Unbounded_String;
+   function Truncate
+     (U : Ada.Strings.Unbounded.Unbounded_String)
       return Ada.Strings.Unbounded.Unbounded_String
    is
       use Ada.Strings.Unbounded;

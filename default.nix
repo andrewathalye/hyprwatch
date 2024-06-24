@@ -28,11 +28,11 @@ stdenv.mkDerivation {
 
    buildPhase = ''
       runHook preBuild
-      gprbuild -j0
+      gprbuild -j0 -XBUILD_MODE=prod
       runHook postBuild
    '';
 
    installPhase = ''
-      gprinstall -m -p -Phyprwatch --prefix=$out --mode=usage --no-project --no-manifest
+      gprinstall -m -p -Phyprwatch -XBUILD_MODE=prod --prefix=$out --mode=usage --no-project --no-manifest
    '';
 }
