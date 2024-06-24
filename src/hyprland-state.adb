@@ -189,14 +189,23 @@ package body Hyprland.State is
            Protocol.Send_Message
              (Hypr => State.Connection.all, Id => Activewindow);
          W_JSON : constant JSON_Value := Read (W);
-
-         Raw_Address : constant String :=
-           W_JSON.Get ("address"); --  See above for format issues
       begin
-         State.Active_Window :=
-           Value
-             ("16#" & Raw_Address (Raw_Address'First + 2 .. Raw_Address'Last) &
-              "#");
+         --  If no window is active at startup
+         if W_JSON.Is_Empty then
+            State.Active_Window := No_Window;
+         else
+            --  Otherwise
+            declare
+               Raw_Address : constant String :=
+                 W_JSON.Get ("address"); --  See above for format issues
+            begin
+               State.Active_Window :=
+                 Value
+                   ("16#" &
+                    Raw_Address (Raw_Address'First + 2 .. Raw_Address'Last) &
+                    "#");
+            end;
+         end if;
       end Read_Active_Window;
 
       State.Valid := True;

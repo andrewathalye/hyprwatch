@@ -139,7 +139,11 @@ package body Hypr_Helpers is
       Active_Window : Hyprland.State.Hyprland_Window;
    begin
       --  If no window is selected then everything should be blank
-      if State.Active_Window = Hyprland.State.No_Window then
+      --  Alternatively, if a window was marked as selected but hasn’t
+      --  officially been opened yet, idem
+      if State.Active_Window = Hyprland.State.No_Window or
+        not State.Windows.Contains (State.Active_Window)
+      then
          Result.Set_Field ("class", "");
          Result.Set_Field ("title", "");
 
