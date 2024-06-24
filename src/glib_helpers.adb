@@ -10,9 +10,9 @@ package body Glib_Helpers is
    -- Hypr_Source_Callback --
    --------------------------
    function Hypr_Source_Callback
-     (Source : Glib.IOChannel.Giochannel;
+     (Source    : Glib.IOChannel.Giochannel;
       Condition : Glib.IOChannel.GIOCondition;
-      Data : access Hyprland.State.Hyprland_State) return Glib.Gboolean
+      Data      : access Hyprland.State.Hyprland_State) return Glib.Gboolean
    is
       pragma Unreferenced (Source);
       pragma Unreferenced (Condition);

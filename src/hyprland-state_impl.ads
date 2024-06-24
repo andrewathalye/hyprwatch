@@ -23,6 +23,7 @@ package Hyprland.State_Impl is
 
    function Value (Item : String) return Hyprland_Workspace_Id;
    function Image (Item : Hyprland_Workspace_Id) return String;
+   function Is_Special (Item : Hyprland_Workspace_Id) return Boolean;
 
    No_Workspace : constant Hyprland_Workspace_Id;
 private

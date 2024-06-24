@@ -219,8 +219,8 @@ package body Hyprland.State is
    ----------------
    function Connection
      (State : in out Hyprland_State)
-      return access Hyprland.Protocol.Hyprland_Connection
-   is (State.Connection);
+      return access Hyprland.Protocol.Hyprland_Connection is
+     (State.Connection);
 
    ------------
    -- Update --
@@ -382,6 +382,8 @@ package body Hyprland.State is
                   Relevant_Workspace.Windows.Delete
                     (Relevant_Workspace.Windows.Find_Index (Window_Id));
                   State.Windows.Delete (Window_Id);
+
+                  State.Active_Window := No_Window;
                end;
             when Movewindowv2 =>
                --  Window_Address, Workspace_Id, Workspace_Name
@@ -397,8 +399,11 @@ package body Hyprland.State is
                     Hyprland_Workspace renames
                     State.Workspaces (State.Windows (Window_Id).Workspace);
                begin
+
                   Relevant_Workspace.Windows.Delete
                     (Relevant_Workspace.Windows.Find_Index (Window_Id));
+
+                  State.Windows (Window_Id).Workspace := Workspace_Id;
                   State.Workspaces (Workspace_Id).Windows.Append (Window_Id);
                end;
             when Windowtitle =>
@@ -423,6 +428,24 @@ package body Hyprland.State is
 
       return Updated;
    end Update;
+
+   ------------------------
+   -- Activate_Workspace --
+   ------------------------
+   procedure Activate_Workspace
+     (State : in out Hyprland_State; Workspace : Hyprland_Workspace_Id)
+   is
+      Result : constant String :=
+        Hyprland.Protocol.Send_Message
+          (Hypr      => State.Connection.all, Id => Dispatch,
+           Arguments =>
+             "workspace " &
+             Strip_Space (Hyprland.State_Impl.Image (Workspace)));
+   begin
+      if Result /= "ok" then
+         raise Request_Failed with Result;
+      end if;
+   end Activate_Workspace;
 
    -----------------
    -- Move_Window --

@@ -30,6 +30,11 @@ package Hyprland.State is
    subtype Hyprland_Workspace_Id is Hyprland.State_Impl.Hyprland_Workspace_Id;
    --  Private type for a workspace ID
 
+   function Is_Special (Item : Hyprland_Workspace_Id) return Boolean renames
+     Hyprland.State_Impl.Is_Special;
+   --  Returns `True` if `Item` is a "special" workspace according
+   --  to Hyprland. In this case it may be sorted differently, etc.
+
    No_Workspace :
      Hyprland_Workspace_Id renames Hyprland.State_Impl.No_Workspace;
    --  The ID of a non-existent workspace
@@ -104,6 +109,10 @@ package Hyprland.State is
    function Update (State : in out Hyprland_State) return Boolean;
    --  Update a `Hyprland_State` object using fresh data from the compositor.
    --  The return value indicates whether any fields were updated.
+
+   procedure Activate_Workspace
+     (State : in out Hyprland_State; Workspace : Hyprland_Workspace_Id);
+   --  Activate the selected workspace
 
    procedure Move_Window
      (State       : in out Hyprland_State; Window : Hyprland_Window_Id;

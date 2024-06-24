@@ -6,9 +6,14 @@ with Interfaces;
 with Hyprland.State_Impl;
 
 package body Hypr_Helpers is
-   function Not_Negative
-     (Workspace : Hyprland.State.Hyprland_Workspace_Id) return Boolean is
-     (Integer'Value (Hyprland.State_Impl.Image (Workspace)) >= 0);
+   --  Simple bounded arithmetic
+   function Bounded_Decrement
+     (Val : Workspace_2D_Axis) return Workspace_2D_Axis is
+     (if Val = Workspace_2D_Axis'First then Val else Val - 1);
+
+   function Bounded_Increment
+     (Val : Workspace_2D_Axis) return Workspace_2D_Axis is
+     (if Val = Workspace_2D_Axis'Last then Val else Val + 1);
 
    -----------
    -- Image --
@@ -27,7 +32,7 @@ package body Hypr_Helpers is
    -- Transform --
    ---------------
 
-   function Transform
+   function Convert
      (W2D : Workspace_2D) return Hyprland.State.Hyprland_Workspace_Id
    is
       use Interfaces;
@@ -40,9 +45,9 @@ package body Hypr_Helpers is
       Raw := Raw or X;
 
       return Hyprland.State_Impl.Value (Raw'Image);
-   end Transform;
+   end Convert;
 
-   function Transform
+   function Convert
      (Workspace : Hyprland.State.Hyprland_Workspace_Id) return Workspace_2D
    is
       use Interfaces;
@@ -54,12 +59,31 @@ package body Hypr_Helpers is
       X := Raw and 16#FF#;
       Y := Shift_Right (Raw, 8) + 1;
       return (Workspace_2D_Axis (X), Workspace_2D_Axis (Y));
-   end Transform;
+   end Convert;
 
-   function Transform
-     (Workspace : Hyprland.State.Hyprland_Workspace_Id) return String is
-     (if Not_Negative (Workspace) then Image (Transform (Workspace))
-      else Hyprland.State_Impl.Image (Workspace));
+   ---------------
+   -- Translate --
+   ---------------
+   function Translate
+     (W2D : Workspace_2D; Direction : Hyprland_Direction) return Workspace_2D
+   is
+      Result : Workspace_2D := W2D;
+   begin
+      case Direction is
+         when Left =>
+            Result.X := Bounded_Decrement (Result.X);
+         when Right =>
+            Result.X := Bounded_Increment (Result.X);
+         when Up =>
+            Result.Y := Bounded_Decrement (Result.Y);
+         when Down =>
+            Result.Y := Bounded_Increment (Result.Y);
+         when Unknown =>
+            raise Program_Error with "Direction unknown";
+      end case;
+
+      return Result;
+   end Translate;
 
    -------------------------------
    -- Generate_Workspace_String --
@@ -78,8 +102,9 @@ package body Hypr_Helpers is
       Buf : Unbounded_String;
    begin
       for W of State.Workspaces loop
-         if W.Id /= Active_W and Not_Negative (W.Id) then
-            Append (Buf, Image (Transform (W.Id)));
+         --  Skip the active workspace and any special workspaces
+         if W.Id /= Active_W and not Hyprland.State.Is_Special (W.Id) then
+            Append (Buf, Image (Convert (W.Id)));
             Append (Buf, " ");
          end if;
       end loop;
@@ -90,6 +115,19 @@ package body Hypr_Helpers is
    --------------------------
    -- Generate_Status_JSON --
    --------------------------
+   function Transform
+     (Workspace : Hyprland.State.Hyprland_Workspace_Id) return String;
+   function Transform
+     (Workspace : Hyprland.State.Hyprland_Workspace_Id) return String
+   is
+   begin
+      if Hyprland.State.Is_Special (Workspace) then
+         return Hyprland.State_Impl.Image (Workspace);
+      else
+         return Image (Convert (Workspace));
+      end if;
+   end Transform;
+
    function Generate_Status_JSON
      (State : Hyprland.State.Hyprland_State) return GNATCOLL.JSON.JSON_Value
    is

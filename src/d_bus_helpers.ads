@@ -17,8 +17,8 @@ package D_Bus_Helpers is
    --  NOT THREAD SAFE
 
    procedure Connect
-      (Service : in out Hypr_Service_Type;
-       State : Hyprland.State.Hyprland_State_Access);
+     (Service : in out Hypr_Service_Type;
+      State   :        Hyprland.State.Hyprland_State_Access);
    --  Connect to D_Bus and set up the Service
 
    procedure Disconnect (Service : in out Hypr_Service_Type) is null;
@@ -26,7 +26,7 @@ package D_Bus_Helpers is
 private
    type Hypr_Service_Type is new D_Bus.Service.Object with record
       Valid : Boolean := False;
-      Bus : D_Bus.Connection.Connection_Type;
+      Bus   : D_Bus.Connection.Connection_Type;
       State : Hyprland.State.Hyprland_State_Access;
    end record;
 end D_Bus_Helpers;

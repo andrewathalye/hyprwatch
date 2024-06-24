@@ -93,9 +93,7 @@ package body Hyprland.Protocol is
    ---------------------
    -- File_Descriptor --
    ---------------------
-   function File_Descriptor
-      (Hypr : Hyprland_Connection) return Integer
-   is
+   function File_Descriptor (Hypr : Hyprland_Connection) return Integer is
    begin
       Assert_Valid (Hypr);
       return GNAT.Sockets.To_C (Hypr.Socket2);
@@ -119,11 +117,9 @@ package body Hyprland.Protocol is
       GNAT.Sockets.Set (Read_Socket_Set, Hypr.Socket2);
 
       GNAT.Sockets.Check_Selector
-        (Selector     => Hypr.Selector,
-         R_Socket_Set => Read_Socket_Set,
-         W_Socket_Set => Write_Socket_Set,
-         Status => Status,
-         Timeout => GNAT.Sockets.Immediate);
+        (Selector     => Hypr.Selector, R_Socket_Set => Read_Socket_Set,
+         W_Socket_Set => Write_Socket_Set, Status => Status,
+         Timeout      => GNAT.Sockets.Immediate);
 
       return Status = Completed;
    end Has_Messages;

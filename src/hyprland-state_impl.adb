@@ -41,4 +41,7 @@ package body Hyprland.State_Impl is
         Ada.Characters.Handling.To_Lower
           (Result (Result'First + 3 .. Result'Last - 1));
    end To_Selector;
+
+   function Is_Special (Item : Hyprland_Workspace_Id) return Boolean is
+     (Item < 0);
 end Hyprland.State_Impl;
