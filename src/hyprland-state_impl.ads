@@ -26,8 +26,10 @@ package Hyprland.State_Impl is
    function Is_Special (Item : Hyprland_Workspace_Id) return Boolean;
 
    No_Workspace : constant Hyprland_Workspace_Id;
+
 private
    type Hyprland_Window_Id is new Interfaces.Unsigned_32;
+
    type Hyprland_Workspace_Id is new Interfaces.Integer_32;
 
    No_Window    : constant Hyprland_Window_Id    := 0; --  Invalid window id

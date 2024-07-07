@@ -1,4 +1,6 @@
 with Ada.Strings.Unbounded;
+with Ada.Unchecked_Conversion;
+with System;
 
 with D_Bus.Messages;
 with D_Bus.Connection.G_Main;
@@ -15,10 +17,56 @@ package body D_Bus_Helpers is
    ---------------
    -- Constants --
    ---------------
+
    Signature_Error : constant String :=
      "org.freedesktop.DBus.Error.InvalidSignature";
    Arguments_Error : constant String :=
      "org.freedesktop.DBus.Error.InvalidArgs";
+
+   ------------------------
+   -- Introspection Data --
+   ------------------------
+   function Read_Introspect_String return String;
+
+   function Read_Introspect_String return String is
+
+      type Symbol is null record with
+        Convention => C;
+      --  Note: DO NOT ATTEMPT TO ACCESS
+
+      function To_Natural (S : aliased Symbol) return Natural;
+      --  Architecture-indepedent function to transform a Symbol into
+      --  a Natural. This is equivalent to reading the address of an
+      --  ELF symbol and interpreting it as a number.
+
+      function To_Natural (S : aliased Symbol) return Natural is
+
+         type Address_Mod is mod System.Memory_Size;
+
+         function Convert is new Ada.Unchecked_Conversion
+           (System.Address, Address_Mod);
+
+      begin
+         return Natural (Convert (S'Address));
+      end To_Natural;
+
+      Introspect_XML_Size : aliased Symbol with
+        Import        => True, Convention => C,
+        External_Name => "_binary_introspect_xml_size";
+
+      Introspect_XML_Start :
+        aliased String (1 .. To_Natural (Introspect_XML_Size)) with
+        Import        => True, Convention => C,
+        External_Name => "_binary_introspect_xml_start";
+
+   begin
+      return Introspect_XML_Start;
+   end Read_Introspect_String;
+
+   Introspect_String : constant String := Read_Introspect_String;
+   --  Note: The reason this is implemented via a call to
+   --  `Read_Introspect_String` is that directly importing
+   --  a variable with dynamic bounds appeared to cause memory issues.
 
    --------------
    -- Internal --
@@ -26,13 +74,16 @@ package body D_Bus_Helpers is
    function To_Struct
      (W2D : Hypr_Helpers.Workspace_2D)
       return D_Bus.Arguments.Containers.Struct_Type;
+
    function To_Struct
      (W2D : Hypr_Helpers.Workspace_2D)
       return D_Bus.Arguments.Containers.Struct_Type
    is
+
       use type D_Bus.Arguments.Basic.Byte_Type;
 
       Struct : D_Bus.Arguments.Containers.Struct_Type;
+
    begin
       Struct.Append (+D_Bus.Byte (W2D.X));
       Struct.Append (+D_Bus.Byte (W2D.Y));
@@ -43,14 +94,17 @@ package body D_Bus_Helpers is
    function To_Direction
      (Direction : D_Bus.Arguments.Basic.String_Type)
       return Hypr_Helpers.Hyprland_Direction;
+
    function To_Direction
      (Direction : D_Bus.Arguments.Basic.String_Type)
       return Hypr_Helpers.Hyprland_Direction
    is
+
       use all type Hypr_Helpers.Hyprland_Direction;
 
       Direction_Str : constant String :=
         D_Bus.Arguments.Basic.To_String (Direction);
+
    begin
       return
         (if Direction_Str = "l" then Left elsif Direction_Str = "r" then Right
@@ -60,14 +114,17 @@ package body D_Bus_Helpers is
 
    function Get_Signature
      (Message : D_Bus.Messages.Message_Type) return String;
+
    function Get_Signature (Message : D_Bus.Messages.Message_Type) return String
    is
+
       use Ada.Strings.Unbounded;
 
       Arguments : constant D_Bus.Arguments.Argument_List_Type :=
         D_Bus.Messages.Get_Arguments (Message);
 
       Buf : Unbounded_String;
+
    begin
       for Index in 1 .. Arguments.Get_Count loop
          Append
@@ -81,46 +138,70 @@ package body D_Bus_Helpers is
    ---------------------------------
    --  D_Bus Method Declarations  --
    ---------------------------------
-   pragma Warnings (Off, "not referenced");
+   Introspect_In : constant String := "";
+   procedure Introspect
+     (Request :     D_Bus.Messages.Message_Type;
+      Reply   : out D_Bus.Messages.Message_Type);
 
-   --  (i16, i16)[] get_workspaces (void)
-   Get_Workspaces_In  : constant String := "";
-   Get_Workspaces_Out : constant String := "a(qq)";
+   Get_Workspaces_In : constant String := "";
    procedure Get_Workspaces
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type);
 
-   --  void activate_workspace (string direction)
-   --  Valid string values: l, r, u, d
-   Activate_Workspace_Rel_In  : constant String := "s";
-   Activate_Workspace_Rel_Out : constant String := "";
+   Activate_Workspace_Rel_In : constant String := "s";
    procedure Activate_Workspace_Rel
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type);
 
-   --  void move_window (u32 window_id, string direction)
-   --  Valid string values: l, r, u, d
-   Move_Window_In  : constant String := "us";
-   Move_Window_Out : constant String := "";
-   procedure Move_Window
+   Move_Window_Rel_In : constant String := "us";
+   procedure Move_Window_Rel
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type);
 
-   pragma Warnings (On, "not referenced");
    ------------------------------------
    --  D_Bus Method Implementations  --
    ------------------------------------
+
+   procedure Introspect
+     (Request :     D_Bus.Messages.Message_Type;
+      Reply   : out D_Bus.Messages.Message_Type)
+   is
+
+      use D_Bus.Arguments.Basic;
+
+      Request_Signature : constant String := Get_Signature (Request);
+
+   begin
+      --  Check signature
+      if Request_Signature /= Introspect_In then
+         Reply :=
+           D_Bus.Messages.New_Error
+             (Reply_To      => Request, Error_Name => Signature_Error,
+              Error_Message =>
+                ASCII.Quotation & Request_Signature & ASCII.Quotation &
+                " != " & ASCII.Quotation & Get_Workspaces_In &
+                ASCII.Quotation);
+         return;
+      end if;
+
+      Reply := D_Bus.Messages.New_Method_Return (Request);
+      D_Bus.Messages.Add_Arguments (Reply, +Introspect_String);
+   end Introspect;
+
    procedure Get_Workspaces
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type)
    is
+
       Request_Signature : constant String := Get_Signature (Request);
 
       List : D_Bus.Arguments.Containers.Array_Type;
+
    begin
       Put_Debug ("Get_Workspaces " & Request_Signature);
 
       --  Check Signature
+
       if Request_Signature /= Get_Workspaces_In then
          Reply :=
            D_Bus.Messages.New_Error
@@ -135,8 +216,10 @@ package body D_Bus_Helpers is
       for W of Global_Service.State.Workspaces loop
          if not Hyprland.State.Is_Special (W.Id) then
             declare
+
                W2D : constant Hypr_Helpers.Workspace_2D :=
                  Hypr_Helpers.Convert (W.Id);
+
             begin
                List.Append (To_Struct (W2D));
             end;
@@ -152,6 +235,7 @@ package body D_Bus_Helpers is
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type)
    is
+
       use all type Hypr_Helpers.Hyprland_Direction;
 
       Request_Signature : constant String := Get_Signature (Request);
@@ -161,10 +245,12 @@ package body D_Bus_Helpers is
       Direction : D_Bus.Arguments.Basic.String_Type;
 
       Ada_Direction : Hypr_Helpers.Hyprland_Direction;
+
    begin
       Put_Debug ("Activate_Workspace_Rel: " & Request_Signature);
 
       --  Check signature
+
       if Request_Signature /= Activate_Workspace_Rel_In then
          Reply :=
            D_Bus.Messages.New_Error
@@ -179,6 +265,7 @@ package body D_Bus_Helpers is
       Direction := D_Bus.Arguments.Basic.String_Type (Arguments.First_Element);
 
       Ada_Direction := To_Direction (Direction);
+
       if Ada_Direction = Unknown then
          Reply :=
            D_Bus.Messages.New_Error
@@ -200,10 +287,11 @@ package body D_Bus_Helpers is
       Reply := D_Bus.Messages.New_Method_Return (Request);
    end Activate_Workspace_Rel;
 
-   procedure Move_Window
+   procedure Move_Window_Rel
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type)
    is
+
       use type Hyprland.State.Hyprland_Window_Id;
       use all type Hypr_Helpers.Hyprland_Direction;
 
@@ -216,17 +304,20 @@ package body D_Bus_Helpers is
 
       Ada_Window    : Hyprland.State.Hyprland_Window_Id;
       Ada_Direction : Hypr_Helpers.Hyprland_Direction;
+
    begin
       Put_Debug ("Move_Window: " & Request_Signature);
 
       --  Check signature
-      if Request_Signature /= Move_Window_In then
+
+      if Request_Signature /= Move_Window_Rel_In then
          Reply :=
            D_Bus.Messages.New_Error
              (Reply_To      => Request, Error_Name => Signature_Error,
               Error_Message =>
                 ASCII.Quotation & Request_Signature & ASCII.Quotation &
-                " != " & ASCII.Quotation & Move_Window_In & ASCII.Quotation);
+                " != " & ASCII.Quotation & Move_Window_Rel_In &
+                ASCII.Quotation);
          return;
       end if;
 
@@ -239,6 +330,7 @@ package body D_Bus_Helpers is
          Ada_Window := Global_Service.State.Active_Window;
 
          --  If there was no active window either
+
          if Ada_Window = Hyprland.State.No_Window then
             Reply :=
               D_Bus.Messages.New_Error
@@ -251,6 +343,7 @@ package body D_Bus_Helpers is
       end if;
 
       Ada_Direction := To_Direction (Direction);
+
       if Ada_Direction = Unknown then
          Reply :=
            D_Bus.Messages.New_Error
@@ -274,16 +367,18 @@ package body D_Bus_Helpers is
                  Direction => Ada_Direction)));
 
       Reply := D_Bus.Messages.New_Method_Return (Request);
-   end Move_Window;
+   end Move_Window_Rel;
 
    -------------------------
    --  Hypr_Service_Type  --
    -------------------------
+
    overriding procedure Initialize (Obj : in out Hypr_Service_Type) is
    begin
-      Obj.Register ("get_workspaces", Get_Workspaces'Access);
-      Obj.Register ("activate_workspace_rel", Activate_Workspace_Rel'Access);
-      Obj.Register ("move_window", Move_Window'Access);
+      Obj.Register ("Introspect", Introspect'Access);
+      Obj.Register ("GetWorkspaces", Get_Workspaces'Access);
+      Obj.Register ("ActivateWorkspaceRel", Activate_Workspace_Rel'Access);
+      Obj.Register ("MoveWindowRel", Move_Window_Rel'Access);
    end Initialize;
 
    procedure Connect
@@ -307,4 +402,5 @@ package body D_Bus_Helpers is
 
       Service.Valid := True;
    end Connect;
+
 end D_Bus_Helpers;

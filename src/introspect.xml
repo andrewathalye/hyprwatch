@@ -1,0 +1,23 @@
+<!DOCTYPE node PUBLIC "-//freedesktop/DTD D-BUS Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/tk/zenithseeker/hyprwatch">
+   <interface name="org.freedesktop.DBus.Introspectable">
+      <method name="Introspect">
+         <arg name="introspect" type="s" direction="out"/>
+      </method>
+   </interface>
+   <interface name="tk.zenithseeker.hyprwatch">
+      <method name="GetWorkspaces">
+         <arg name="workspaces" type="a(qq)" direction="out"/>
+      </method>
+      <method name="ActivateWorkspaceRel">
+         <arg name="direction" type="s" direction="in"/>
+         <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
+      </method>
+      <method name="MoveWindowRel">
+         <arg name="window_id" type="u" direction="in"/>
+         <arg name="direction" type="s" direction="in"/>
+         <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
+      </method>
+   </interface>
+</node>

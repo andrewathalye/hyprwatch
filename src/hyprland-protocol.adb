@@ -8,6 +8,7 @@ with Ada.Streams.Stream_IO;
 with Debug; use Debug;
 
 package body Hyprland.Protocol is
+
    function "+"
      (Source : Ada.Strings.Unbounded.Unbounded_String) return String renames
      Ada.Strings.Unbounded.To_String;
@@ -16,6 +17,7 @@ package body Hyprland.Protocol is
    --  Assert_Valid  --
    --------------------
    procedure Assert_Valid (Hypr : Hyprland_Connection);
+
    procedure Assert_Valid (Hypr : Hyprland_Connection) is
    begin
       if not Hypr.Valid then
@@ -29,20 +31,24 @@ package body Hyprland.Protocol is
    --  Checks that the correct environment variables are set and that
    --  the /hypr/ directory exists.
    function Get_Hypr_Socket_Base_Path return String;
+
    function Get_Hypr_Socket_Base_Path return String is
    begin
       if not Ada.Environment_Variables.Exists ("HYPRLAND_INSTANCE_SIGNATURE")
       then
          raise Socket_Not_Found with "HYPRLAND_INSTANCE_SIGNATURE not set.";
+
       elsif not Ada.Environment_Variables.Exists ("XDG_RUNTIME_DIR") then
          raise Socket_Not_Found with "XDG_RUNTIME_DIR not set.";
       end if;
 
       declare
+
          Proposed_Path : constant String :=
            Ada.Environment_Variables.Value ("XDG_RUNTIME_DIR") & "/hypr/" &
            Ada.Environment_Variables.Value ("HYPRLAND_INSTANCE_SIGNATURE") &
            "/";
+
       begin
          if not Ada.Directories.Exists (Proposed_Path) then
             raise Socket_Not_Found
@@ -58,7 +64,9 @@ package body Hyprland.Protocol is
    -------------
 
    procedure Connect (Hypr : in out Hyprland_Connection) is
+
       Hypr_Socket_Base_Path : constant String := Get_Hypr_Socket_Base_Path;
+
    begin
       if Hypr.Valid then
          raise Invalid_Connection
@@ -95,6 +103,7 @@ package body Hyprland.Protocol is
    ---------------------
    -- File_Descriptor --
    ---------------------
+
    function File_Descriptor (Hypr : Hyprland_Connection) return Integer is
    begin
       Assert_Valid (Hypr);
@@ -106,12 +115,14 @@ package body Hyprland.Protocol is
    ------------------
 
    function Has_Messages (Hypr : in out Hyprland_Connection) return Boolean is
+
       use all type GNAT.Sockets.Selector_Status;
 
       Read_Socket_Set  : GNAT.Sockets.Socket_Set_Type;
       Write_Socket_Set : GNAT.Sockets.Socket_Set_Type;
 
       Status : GNAT.Sockets.Selector_Status;
+
    begin
       Assert_Valid (Hypr);
 
@@ -133,23 +144,28 @@ package body Hyprland.Protocol is
    function Receive_Message
      (Hypr : in out Hyprland_Connection) return Hypr2_Message
    is
+
       Msg_Id      : Ada.Strings.Unbounded.Unbounded_String;
       Msg_Id_Done : Boolean := False;
 
       Msg_Body : Ada.Strings.Unbounded.Unbounded_String;
 
       Buf : Character;
+
    begin
       Assert_Valid (Hypr);
 
       Character'Read (Hypr.Stream2, Buf);
+
       while Buf /= ASCII.LF loop
          if Msg_Id_Done then
             Ada.Strings.Unbounded.Append (Msg_Body, Buf);
+
          else
             if Buf = '>' then
                Character'Read (Hypr.Stream2, Buf); --  '>'
                Msg_Id_Done := True;
+
             else
                Ada.Strings.Unbounded.Append (Msg_Id, Buf);
             end if;
@@ -171,6 +187,7 @@ package body Hyprland.Protocol is
      (Hypr      : in out Hyprland_Connection; Id : Hypr1_Message_Id;
       Arguments :        String := "") return String
    is
+
       pragma Unreferenced (Hypr);
 
       use GNAT.Sockets;
@@ -179,6 +196,7 @@ package body Hyprland.Protocol is
 
       Socket : GNAT.Sockets.Socket_Type;
       Stream : GNAT.Sockets.Stream_Access;
+
    begin
       --  Open Hypr1 for reading / writing
       --  Note: This socket automatically closes after a command is issued.
@@ -207,7 +225,9 @@ package body Hyprland.Protocol is
       Buf := Ada.Strings.Unbounded.Null_Unbounded_String;
 
       declare
+
          C : Character;
+
       begin
          loop
             Character'Read (Stream, C);

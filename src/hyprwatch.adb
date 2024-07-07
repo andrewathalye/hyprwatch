@@ -18,6 +18,7 @@ with Debug; use Debug;
 
 procedure hyprwatch is
    --  Hyprland
+
    Hypr_State : aliased Hyprland.State.Hyprland_State;
 
    --  Glib
@@ -26,6 +27,7 @@ procedure hyprwatch is
 
    Hypr_Channel : Glib.IOChannel.Giochannel;
    Discard      : Glib.Main.G_Source_Id;
+
 begin
    Put_Debug ("Starting hyprwatch");
 
@@ -36,9 +38,19 @@ begin
    Put_Line (Hypr_Helpers.Generate_Status_JSON (Hypr_State).Write);
 
    --  D_Bus
+   --  Note: intentionally not freed as it persists throughout the program
    D_Bus_Helpers.Global_Service := new D_Bus_Helpers.Hypr_Service_Type;
-   D_Bus_Helpers.Connect
-     (D_Bus_Helpers.Global_Service.all, Hypr_State'Unchecked_Access);
+
+   begin
+      D_Bus_Helpers.Connect
+        (D_Bus_Helpers.Global_Service.all, Hypr_State'Unchecked_Access);
+   exception
+      when D_Bus.D_Bus_Error =>
+         Put_Line
+           (Standard_Error,
+            "[Error] Unable to acquire D_Bus service name." &
+            " Will continue in observer mode.");
+   end;
 
    --  Glib
    Hypr_Channel :=

@@ -2,6 +2,8 @@ with "dbusada";
 with "gnatcoll";
 with "gtkada";
 
+with "introspect/introspect";
+
 project hyprwatch is
    type Build_Mode_Type is ("dev", "prod");
    Build_Mode : Build_Mode_Type := external ("BUILD_MODE", "dev");
@@ -12,15 +14,15 @@ project hyprwatch is
    for Main use ("hyprwatch.adb");
 
    package Compiler is
-      Common_Switches := ("-gnatwa", "-gnatVa", "-gnatyy");
+      Common_Switches := ("-gnatwa", "-gnatwe", "-gnatyy", "-fvisibility=hidden");
 
       case Build_Mode is
          when "dev" =>
             for Default_Switches ("Ada") use
-               Common_Switches & ("-g", "-Og", "-gnata");
+               Common_Switches & ("-g", "-Og", "-gnata", "-gnatVa");
          when "prod" =>
             for Default_Switches ("Ada") use
-               Common_Switches & ("-O3", "-ffast-math");
+               Common_Switches & ("-O3", "-gnatp", "-ffast-math");
       end case;
    end Compiler;
 
@@ -37,11 +39,10 @@ project hyprwatch is
 
    package Linker is
       case Build_Mode is
-         when "dev" => null;
+         when "dev" =>  null;
          when "prod" =>
             for Default_Switches ("Ada") use ("-Wl,-s", "-Wl,--gc-sections");
       end case;
    end Linker;
-      
 
 end hyprwatch;

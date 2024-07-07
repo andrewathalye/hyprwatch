@@ -23,6 +23,7 @@ package D_Bus_Helpers is
 
    procedure Disconnect (Service : in out Hypr_Service_Type) is null;
    --  TODO (not needed at the moment)
+
 private
    type Hypr_Service_Type is new D_Bus.Service.Object with record
       Valid : Boolean := False;

@@ -6,6 +6,7 @@ use type Interfaces.Unsigned_32;
 use type Interfaces.Integer_32;
 
 package body Hyprland.State_Impl is
+
    package Unsigned_32_IO is new Ada.Text_IO.Modular_IO
      (Interfaces.Unsigned_32);
 
@@ -25,11 +26,13 @@ package body Hyprland.State_Impl is
    function Image (Item : Hyprland_Workspace_Id) return String is (Item'Image);
 
    function To_Selector (Item : Hyprland_Window_Id) return String is
+
       use Unsigned_32_IO;
 
       Prefix : constant String  := "address:0x";
       Result : String (1 .. 11) := "16#0000000#";
       --  TODO Check whether it can actually take the full 12 bytes
+
    begin
       --  Print hexadecimal representation of Item
       Put (Result, Interfaces.Unsigned_32 (Item), 16);
@@ -44,4 +47,5 @@ package body Hyprland.State_Impl is
 
    function Is_Special (Item : Hyprland_Workspace_Id) return Boolean is
      (Item < 0);
+
 end Hyprland.State_Impl;

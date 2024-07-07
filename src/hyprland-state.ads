@@ -66,6 +66,7 @@ package Hyprland.State is
    subtype Hyprland_Workspace_List is Hyprland_Workspace_Lists.Map;
 
    type Hyprland_State is tagged private;
+
    type Hyprland_State_Access is access all Hyprland_State;
 
    -------------------------
@@ -118,6 +119,7 @@ package Hyprland.State is
      (State       : in out Hyprland_State; Window : Hyprland_Window_Id;
       Destination :        Hyprland_Workspace_Id);
    --  Move a window to another workspace.
+
 private
    type HCA is access Protocol.Hyprland_Connection;
 

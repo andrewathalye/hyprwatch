@@ -1,0 +1,19 @@
+library project introspect is
+   for Languages use ("XML");
+   for Library_Name use "introspect";
+   for Library_Dir use "../obj/introspect/lib/";
+   for Object_Dir use "../obj/introspect/";
+   for Source_Dirs use ("../src/");
+   for Source_Files use ("introspect.xml");
+   for Library_Kind use "static";
+   for Library_Support use "full";
+   for Library_Builder use "./introspect/gprlib-wrapper.sh";
+
+   package Naming is
+      for Body_Suffix ("XML") use ".xml";
+   end Naming;
+
+   package Compiler is
+      for Driver ("XML") use "./introspect/cc-wrapper.sh";
+   end Compiler;
+end introspect;

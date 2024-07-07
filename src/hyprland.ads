@@ -8,6 +8,7 @@ package Hyprland is
    --------------------
    --  Enumerations  --
    --------------------
+
    type Hypr1_Message_Id is
      (Dispatch, Keyword, Reload, Kill, Setcursor, Output, Switchxkblayout,
       Seterror, Setprop, Notify, Dismissnotify, Version, Monitors, Workspaces,
@@ -19,9 +20,10 @@ package Hyprland is
      (Workspace, Workspacev2, Focusedmon, Activewindow, Activewindowv2,
       Fullscreen, Monitorremoved, Monitoradded, Monitoraddedv2,
       Createworkspace, Createworkspacev2, Destroyworkspace, Destroyworkspacev2,
-      Movetoworkspace, Movetoworkspacev2, Renameworkspace, Activespecial,
-      Activelayout, Openwindow, Closewindow, Movewindow, Movewindowv2,
-      Openlayer, Closelayer, Submap, Changefloatingmode, Urgent, Minimize,
-      Screencast, Windowtitle, Togglegroup, Moveintogroup, Moveoutofgroup,
-      Ignoregrouplock, Lockgroups, Configreloaded, Pin);
+      Moveworkspace, Moveworkspacev2, Movetoworkspace, Movetoworkspacev2,
+      Renameworkspace, Activespecial, Activelayout, Openwindow, Closewindow,
+      Movewindow, Movewindowv2, Openlayer, Closelayer, Submap,
+      Changefloatingmode, Urgent, Minimize, Screencast, Windowtitle,
+      Togglegroup, Moveintogroup, Moveoutofgroup, Ignoregrouplock, Lockgroups,
+      Configreloaded, Pin);
 end Hyprland;

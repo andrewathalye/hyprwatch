@@ -9,6 +9,7 @@ nix-ada.pkgs.mkShell {
       nix-ada.ada-language-server
       nix-ada.pkgs.nodejs
       nix-ada.pkgs.gdb
+      nix-ada.pkgs.which
    ];
       
    buildInputs = [
@@ -16,4 +17,8 @@ nix-ada.pkgs.mkShell {
       nix-ada.gtkada
       nix-ada.pkgs.gnatcoll-core
    ];
+
+   shellHook = ''
+      export LIBRARY_TYPE=relocatable
+   '';
 }

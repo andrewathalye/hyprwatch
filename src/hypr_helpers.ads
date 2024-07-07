@@ -5,6 +5,7 @@ package Hypr_Helpers is
    --  Various helpers for Hyprland-related tasks used in `Hyprwatch`
 
    subtype Workspace_2D_Axis is Positive range 1 .. 255;
+
    type Workspace_2D is record
       X : Workspace_2D_Axis;
       Y : Workspace_2D_Axis;

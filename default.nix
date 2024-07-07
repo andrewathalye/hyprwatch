@@ -3,6 +3,7 @@
 # Native
 , gnat
 , gprbuild
+, which
 
 # Deps
 , dbus-ada
@@ -12,12 +13,13 @@
 
 stdenv.mkDerivation {
    pname = "hyprwatch";
-   version = "1.2";
+   version = "1.3";
    src = ./.;
    
    nativeBuildInputs = [
       gprbuild
       gnat
+      which
    ];
 
    buildInputs = [
@@ -28,11 +30,11 @@ stdenv.mkDerivation {
 
    buildPhase = ''
       runHook preBuild
-      gprbuild -j0 -XBUILD_MODE=prod
+      gprbuild -j0 -XBUILD_MODE=prod -XLIBRARY_TYPE=relocatable
       runHook postBuild
    '';
 
    installPhase = ''
-      gprinstall -m -p -Phyprwatch -XBUILD_MODE=prod --prefix=$out --mode=usage --no-project --no-manifest
+      gprinstall -m -p -Phyprwatch -XBUILD_MODE=prod -XLIBRARY_TYPE=relocatable --prefix=$out --mode=usage --no-project --no-manifest
    '';
 }

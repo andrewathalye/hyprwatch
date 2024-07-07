@@ -21,6 +21,7 @@ package Hyprland.Protocol is
    -------------
    --  Types  --
    -------------
+
    type Hyprland_Connection is limited private;
    --  The base Hyprland object. `Connect` to the compositor to use it and
    --  `Disconnect` when done.
@@ -64,6 +65,7 @@ package Hyprland.Protocol is
       Arguments :        String := "") return String;
    --  Sends a message to Hyprland (synchronous, blocking)
    --  Returns Hypr1's response
+
 private
    type Hyprland_Connection is limited record
       Valid : Boolean := False;

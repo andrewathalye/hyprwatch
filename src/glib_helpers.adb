@@ -5,21 +5,23 @@ with Ada.Text_IO;
 with Hypr_Helpers;
 
 package body Glib_Helpers is
-
    --------------------------
    -- Hypr_Source_Callback --
    --------------------------
+
    function Hypr_Source_Callback
      (Source    : Glib.IOChannel.Giochannel;
       Condition : Glib.IOChannel.GIOCondition;
       Data      : access Hyprland.State.Hyprland_State) return Glib.Gboolean
    is
+
       pragma Unreferenced (Source);
       pragma Unreferenced (Condition);
 
       use Ada.Text_IO;
 
       Has_Updates : Boolean;
+
    begin
       Has_Updates := Data.Update;
 
@@ -29,4 +31,5 @@ package body Glib_Helpers is
 
       return Glib.Gboolean (1);
    end Hypr_Source_Callback;
+
 end Glib_Helpers;

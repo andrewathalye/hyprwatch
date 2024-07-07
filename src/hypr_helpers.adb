@@ -7,6 +7,7 @@ with Hyprland.State_Impl;
 
 package body Hypr_Helpers is
    --  Simple bounded arithmetic
+
    function Bounded_Decrement
      (Val : Workspace_2D_Axis) return Workspace_2D_Axis is
      (if Val = Workspace_2D_Axis'First then Val else Val - 1);
@@ -20,8 +21,10 @@ package body Hypr_Helpers is
    -----------
 
    function Image (Item : Workspace_2D) return String is
+
       X_Image : constant String := Item.X'Image;
       Y_Image : constant String := Item.Y'Image;
+
    begin
       return
         "(" & X_Image (X_Image'First + 1 .. X_Image'Last) & "," &
@@ -35,11 +38,13 @@ package body Hypr_Helpers is
    function Convert
      (W2D : Workspace_2D) return Hyprland.State.Hyprland_Workspace_Id
    is
+
       use Interfaces;
 
       X   : constant Unsigned_32 := Unsigned_32 (W2D.X);
       Y   : constant Unsigned_32 := Unsigned_32 (W2D.Y);
       Raw : Unsigned_32;
+
    begin
       Raw := Shift_Left (Y - 1, 8);
       Raw := Raw or X;
@@ -50,11 +55,13 @@ package body Hypr_Helpers is
    function Convert
      (Workspace : Hyprland.State.Hyprland_Workspace_Id) return Workspace_2D
    is
+
       use Interfaces;
       Raw : constant Unsigned_32 :=
         Unsigned_32'Value (Hyprland.State_Impl.Image (Workspace));
       X   : Unsigned_32;
       Y   : Unsigned_32;
+
    begin
       X := Raw and 16#FF#;
       Y := Shift_Right (Raw, 8) + 1;
@@ -64,20 +71,27 @@ package body Hypr_Helpers is
    ---------------
    -- Translate --
    ---------------
+
    function Translate
      (W2D : Workspace_2D; Direction : Hyprland_Direction) return Workspace_2D
    is
+
       Result : Workspace_2D := W2D;
+
    begin
       case Direction is
          when Left =>
             Result.X := Bounded_Decrement (Result.X);
+
          when Right =>
             Result.X := Bounded_Increment (Result.X);
+
          when Up =>
             Result.Y := Bounded_Decrement (Result.Y);
+
          when Down =>
             Result.Y := Bounded_Increment (Result.Y);
+
          when Unknown =>
             raise Program_Error with "Direction unknown";
       end case;
@@ -90,9 +104,11 @@ package body Hypr_Helpers is
    -------------------------------
    function Generate_Workspace_String
      (State : Hyprland.State.Hyprland_State) return String;
+
    function Generate_Workspace_String
      (State : Hyprland.State.Hyprland_State) return String
    is
+
       use Ada.Strings.Unbounded;
       use type Hyprland.State.Hyprland_Workspace_Id;
 
@@ -100,6 +116,7 @@ package body Hypr_Helpers is
         State.Active_Workspace;
 
       Buf : Unbounded_String;
+
    begin
       for W of State.Workspaces loop
          --  Skip the active workspace and any special workspaces
@@ -117,12 +134,14 @@ package body Hypr_Helpers is
    --------------------------
    function Transform
      (Workspace : Hyprland.State.Hyprland_Workspace_Id) return String;
+
    function Transform
      (Workspace : Hyprland.State.Hyprland_Workspace_Id) return String
    is
    begin
       if Hyprland.State.Is_Special (Workspace) then
          return Hyprland.State_Impl.Image (Workspace);
+
       else
          return Image (Convert (Workspace));
       end if;
@@ -131,14 +150,18 @@ package body Hypr_Helpers is
    function Truncate
      (U : Ada.Strings.Unbounded.Unbounded_String)
       return Ada.Strings.Unbounded.Unbounded_String;
+
    function Truncate
      (U : Ada.Strings.Unbounded.Unbounded_String)
       return Ada.Strings.Unbounded.Unbounded_String
    is
+
       use Ada.Strings.Unbounded;
+
    begin
       if Length (U) > 100 then
          return Unbounded_Slice (U, 1, 100);
+
       else
          return U;
       end if;
@@ -147,12 +170,14 @@ package body Hypr_Helpers is
    function Generate_Status_JSON
      (State : Hyprland.State.Hyprland_State) return GNATCOLL.JSON.JSON_Value
    is
+
       use GNATCOLL.JSON;
       use type Hyprland.State.Hyprland_Window_Id;
 
       Result : constant JSON_Value := GNATCOLL.JSON.Create_Object;
 
       Active_Window : Hyprland.State.Hyprland_Window;
+
    begin
       --  If no window is selected then everything should be blank
       --  Alternatively, if a window was marked as selected but hasn’t
@@ -166,6 +191,7 @@ package body Hypr_Helpers is
          --  Take 'workspace' from the generic focused workspace
          Result.Set_Field
            ("workspace", Hypr_Helpers.Transform (State.Active_Workspace));
+
       else
          Active_Window := State.Windows.Element (State.Active_Window);
          Result.Set_Field ("class", Active_Window.Class);
@@ -182,4 +208,5 @@ package body Hypr_Helpers is
 
       return Result;
    end Generate_Status_JSON;
+
 end Hypr_Helpers;

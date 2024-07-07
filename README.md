@@ -9,19 +9,13 @@ Run `./hyprwatch` to get a decent idea of how it all works.
 DBus Interface
 --------------
 
-```
-tk.zenithseeker.hyprwatch:
-   /tk/zenithseeker/hyprwatch
-      (i16, i16)[] get_workspaces (void)
-      void activate_workspace (string direction)
-      void move_window (u32 window_id, string direction)
-```
+See `src/introspect.xml` for the DBus interface documentation or
+call `org.freedesktop.DBus.Introspectable.Introspect` on `/tk/zenithseeker/hyprwatch`
 
-Direction can be one of (l, r, u, d).
+`direction` can be one of `("l", "r", "u", "d")`.
 
-
-Building
---------
+Development
+-----------
 `nix develop ./flake.nix` followed by `gprbuild -j0`
 
 Use `DEBUG=1 ./hyprwatch` if you need to debug the protocol support or DBus messages.
