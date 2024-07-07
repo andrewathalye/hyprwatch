@@ -71,7 +71,4 @@ begin
 
    --  Main Loop
    D_Bus.G_Main.Start;
-
-   pragma Warnings (Off, "unreachable");
-   Hypr_State.Disconnect;
 end hyprwatch;

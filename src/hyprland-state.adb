@@ -93,11 +93,6 @@ package body Hyprland.State is
    function Fullscreen (State : Hyprland_State) return Boolean is
      (State.Fullscreen);
 
-   ----------------
-   --  Is_Valid  --
-   ----------------
-   function Is_Valid (State : Hyprland_State) return Boolean is (State.Valid);
-
    -------------
    -- Connect --
    -------------

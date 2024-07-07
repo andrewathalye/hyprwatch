@@ -14,7 +14,7 @@ project hyprwatch is
    for Main use ("hyprwatch.adb");
 
    package Compiler is
-      Common_Switches := ("-gnatwa", "-gnatwe", "-gnatyy", "-fvisibility=hidden");
+      Common_Switches := ("-gnatwa", "-gnatwe", "-gnatyy", "-fvisibility=hidden", "-gnatX");
 
       case Build_Mode is
          when "dev" =>

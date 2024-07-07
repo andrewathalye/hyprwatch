@@ -69,17 +69,6 @@ package Hyprland.State is
 
    type Hyprland_State_Access is access all Hyprland_State;
 
-   -------------------------
-   --  Validity Checking  --
-   -------------------------
-   function Is_Valid (State : Hyprland_State) return Boolean;
-   --  Checks whether `State` is valid
-
-   subtype Valid_Hyprland_State is Hyprland_State with
-       Dynamic_Predicate => Is_Valid (Valid_Hyprland_State);
-   --  A `Hyprland_State` object which semantically cannot be
-   --  invalid.
-
    -----------------
    --  Accessors  --
    -----------------
