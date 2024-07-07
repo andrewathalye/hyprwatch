@@ -1,3 +1,5 @@
+pragma Ada_2022;
+
 with Ada.Strings.Unbounded;
 with Ada.Unchecked_Conversion;
 with System;
@@ -148,6 +150,11 @@ package body D_Bus_Helpers is
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type);
 
+   Activate_Workspace_In : constant String := "(qq)";
+   procedure Activate_Workspace
+    (Request : D_Bus.Messages.Message_Type;
+     Reply : out D_Bus.Messages.Message_Type);
+
    Activate_Workspace_Rel_In : constant String := "s";
    procedure Activate_Workspace_Rel
      (Request :     D_Bus.Messages.Message_Type;
@@ -158,10 +165,16 @@ package body D_Bus_Helpers is
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type);
 
+   Update_Keyboard_Layout_In : constant String := "s(ss)s";
+   pragma Unreferenced (Update_Keyboard_Layout_In);
+   procedure Update_Keyboard_Layout
+     (Request : D_Bus.Messages.Message_Type;
+      Reply : out D_Bus.Messages.Message_Type) is null;
+   --  TODO needs implemented
+
    ------------------------------------
    --  D_Bus Method Implementations  --
    ------------------------------------
-
    procedure Introspect
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type)
@@ -172,6 +185,8 @@ package body D_Bus_Helpers is
       Request_Signature : constant String := Get_Signature (Request);
 
    begin
+      Put_Debug ("Introspect " & Request_Signature);
+
       --  Check signature
       if Request_Signature /= Introspect_In then
          Reply :=
@@ -201,7 +216,6 @@ package body D_Bus_Helpers is
       Put_Debug ("Get_Workspaces " & Request_Signature);
 
       --  Check Signature
-
       if Request_Signature /= Get_Workspaces_In then
          Reply :=
            D_Bus.Messages.New_Error
@@ -231,6 +245,61 @@ package body D_Bus_Helpers is
         (Msg => Reply, Args => D_Bus.Arguments.Argument_List_Type (List));
    end Get_Workspaces;
 
+   procedure Activate_Workspace
+    (Request : D_Bus.Messages.Message_Type;
+     Reply : out D_Bus.Messages.Message_Type)
+   is
+      use Hypr_Helpers;
+
+      Request_Signature : constant String := Get_Signature (Request);
+
+      Workspace_D_Bus : D_Bus.Arguments.Containers.Struct_Type;
+      Workspace : Hypr_Helpers.Workspace_2D;
+   begin
+      Put_Debug ("Activate_Workspace: " & Request_Signature);
+
+      --  Check signature
+      if Request_Signature /= Activate_Workspace_In then
+         Reply := D_Bus.Messages.New_Error
+           (Reply_To => Request,
+            Error_Name => Signature_Error,
+            Error_Message =>
+               ASCII.Quotation & Request_Signature & ASCII.Quotation & " != " &
+               ASCII.Quotation & Activate_Workspace_In & ASCII.Quotation);
+         return;
+      end if;
+
+      Workspace_D_Bus := D_Bus.Arguments.Containers.Struct_Type
+        (D_Bus.Messages.Get_Arguments (Request).First_Element);
+
+      begin
+         Workspace :=
+           (X => Workspace_2D_Axis
+              (D_Bus.Arguments.Basic.To_Ada
+                 (D_Bus.Arguments.Basic.U_Int16_Type
+                    (Workspace_D_Bus.First_Element))),
+            Y => Workspace_2D_Axis
+              (D_Bus.Arguments.Basic.To_Ada
+                 (D_Bus.Arguments.Basic.U_Int16_Type
+                  (Workspace_D_Bus.Last_Element))));
+      exception
+         when Constraint_Error =>
+            Reply := D_Bus.Messages.New_Error
+              (Reply_To => Request,
+               Error_Name => Arguments_Error,
+               Error_Message =>
+                  "The arguments could not be parsed as a 2D workspace.");
+            return;
+      end;
+
+      Put_Debug (Image (Workspace));
+
+      Global_Service.State.Activate_Workspace
+        (Hypr_Helpers.Convert (Workspace));
+
+      Reply := D_Bus.Messages.New_Method_Return (Request);
+   end Activate_Workspace;
+
    procedure Activate_Workspace_Rel
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type)
@@ -250,7 +319,6 @@ package body D_Bus_Helpers is
       Put_Debug ("Activate_Workspace_Rel: " & Request_Signature);
 
       --  Check signature
-
       if Request_Signature /= Activate_Workspace_Rel_In then
          Reply :=
            D_Bus.Messages.New_Error
@@ -306,7 +374,7 @@ package body D_Bus_Helpers is
       Ada_Direction : Hypr_Helpers.Hyprland_Direction;
 
    begin
-      Put_Debug ("Move_Window: " & Request_Signature);
+      Put_Debug ("Move_Window_Rel: " & Request_Signature);
 
       --  Check signature
 
@@ -375,10 +443,15 @@ package body D_Bus_Helpers is
 
    overriding procedure Initialize (Obj : in out Hypr_Service_Type) is
    begin
+      --  org.freedesktop.DBus.Introspectable
       Obj.Register ("Introspect", Introspect'Access);
+
+      --  tk.zenithseeker.hyprwatch
       Obj.Register ("GetWorkspaces", Get_Workspaces'Access);
+      Obj.Register ("ActivateWorkspace", Activate_Workspace'Access);
       Obj.Register ("ActivateWorkspaceRel", Activate_Workspace_Rel'Access);
       Obj.Register ("MoveWindowRel", Move_Window_Rel'Access);
+      Obj.Register ("UpdateKeyboardLayout", Update_Keyboard_Layout'Access);
    end Initialize;
 
    procedure Connect
