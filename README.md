@@ -1,10 +1,12 @@
 Hyprwatch
 =========
 A tool to watch over Hyprland and communicate via other scripts over DBus.
-It outputs a JSON string every time that a Hyprland event occurs over Socket2.
 
 This makes up the core of my personal two-dimensional Hyprland workspace setup.
-Run `./hyprwatch` to get a decent idea of how it all works.
+Run `./hyprwatch` and then `./hyprlisten` to get a decent idea of how it all works.
+
+`hyprlisten` reads signals from `hyprwatch` and prints out information in JSON format.
+I personally use this for EWW integration.
 
 DBus Interface
 --------------

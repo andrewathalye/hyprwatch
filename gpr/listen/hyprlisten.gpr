@@ -1,0 +1,20 @@
+with "dbusada";
+
+project hyprlisten is
+   for Exec_Dir use "../..";
+   for Source_Dirs use ("src");
+   for Object_Dir use "../../obj/hyprlisten/";
+   for Main use ("hyprlisten.adb");
+
+   package Compiler is
+      for Default_Switches ("Ada") use ("-gnatwa", "-gnatwe", "-gnatyy", "-fvisibility=hidden", "-O3", "-gnatp", "-ffast-math");
+   end Compiler;
+
+   package Binder is
+      for Default_Switches ("Ada") use ("-shared");
+   end Binder;
+
+   package Linker is
+      for Default_Switches ("Ada") use ("-Wl,-s", "-Wl,--gc-sections");
+   end Linker;
+end hyprlisten;

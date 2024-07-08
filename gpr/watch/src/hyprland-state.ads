@@ -77,7 +77,6 @@ package Hyprland.State is
    function Active_Window (State : Hyprland_State) return Hyprland_Window_Id;
    function Active_Workspace
      (State : Hyprland_State) return Hyprland_Workspace_Id;
-   function Fullscreen (State : Hyprland_State) return Boolean;
 
    -------------------
    --  Subprograms  --
@@ -109,6 +108,12 @@ package Hyprland.State is
       Destination :        Hyprland_Workspace_Id);
    --  Move a window to another workspace.
 
+   procedure Set_Layout
+     (State   : in out Hyprland_State; Keyboard : String; Layout : String;
+      Variant :        String);
+   --  Set the current keyboard layout to (Layout, Variant)
+   --  TODO this is currently global across all keyboards
+
 private
    type HCA is access Protocol.Hyprland_Connection;
 
@@ -120,6 +125,7 @@ private
       Windows          : Hyprland_Window_List;
       Active_Window    : Hyprland_Window_Id    := No_Window;
       Active_Workspace : Hyprland_Workspace_Id := No_Workspace;
-      Fullscreen       : Boolean               := False;
+
+      --      Primary_Keyboard : Ada.Strings.Unbounded.Unbounded_String;
    end record;
 end Hyprland.State;

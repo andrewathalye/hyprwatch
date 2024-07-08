@@ -1,7 +1,5 @@
 pragma Ada_2022;
 
-with Ada.Text_IO; use Ada.Text_IO;
-
 with D_Bus.G_Main;
 
 with Glib.Main;
@@ -12,7 +10,6 @@ with Hyprland.State;
 
 with D_Bus_Helpers;
 with Glib_Helpers;
-with Hypr_Helpers;
 
 with Debug; use Debug;
 
@@ -27,30 +24,18 @@ procedure hyprwatch is
 
    Hypr_Channel : Glib.IOChannel.Giochannel;
    Discard      : Glib.Main.G_Source_Id;
-
 begin
    Put_Debug ("Starting hyprwatch");
 
    --  Hyprland
    Hypr_State.Connect;
 
-   --  Print initial status update
-   Put_Line (Hypr_Helpers.Generate_Status_JSON (Hypr_State).Write);
-
    --  D_Bus
    --  Note: intentionally not freed as it persists throughout the program
    D_Bus_Helpers.Global_Service := new D_Bus_Helpers.Hypr_Service_Type;
 
-   begin
-      D_Bus_Helpers.Connect
-        (D_Bus_Helpers.Global_Service.all, Hypr_State'Unchecked_Access);
-   exception
-      when D_Bus.D_Bus_Error =>
-         Put_Line
-           (Standard_Error,
-            "[Error] Unable to acquire D_Bus service name." &
-            " Will continue in observer mode.");
-   end;
+   D_Bus_Helpers.Connect
+     (D_Bus_Helpers.Global_Service.all, Hypr_State'Unchecked_Access);
 
    --  Glib
    Hypr_Channel :=

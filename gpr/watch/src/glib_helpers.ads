@@ -4,6 +4,7 @@ with Hyprland.State;
 
 package Glib_Helpers is
    --  Helper functions for Glib integration into Hyprwatch
+   --  Also sends out D_Bus signals on Hyprland updates
 
    function Hypr_Source_Callback
      (Source    : Glib.IOChannel.Giochannel;

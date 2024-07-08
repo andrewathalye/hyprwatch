@@ -90,9 +90,6 @@ package body Hyprland.State is
      (State : Hyprland_State) return Hyprland_Workspace_Id is
      (State.Active_Workspace);
 
-   function Fullscreen (State : Hyprland_State) return Boolean is
-     (State.Fullscreen);
-
    -------------
    -- Connect --
    -------------
@@ -287,6 +284,16 @@ package body Hyprland.State is
                begin
                   State.Active_Workspace := Workspace_Id;
                end;
+            when Focusedmon =>
+               --  Monitor_Id, Workspace_Id
+               declare
+                  Args         : constant Unbounded_String_Array :=
+                    Parse_Args (Msg.Msg_Body, 2);
+                  Workspace_Id : constant Hyprland_Workspace_Id  :=
+                    Value (+(Args (2)));
+               begin
+                  State.Active_Workspace := Workspace_Id;
+               end;
 
             when Activewindow =>
                --  Class, Title
@@ -322,7 +329,7 @@ package body Hyprland.State is
                   --  Update the class and title if the window was marked stale
                   --  Skip this if the Openwindow event has not yet been fired.
 
-                  if State.Windows.Contains (Window_Id)
+                  if State.Windows.Contains (State.Active_Window)
                     and then State.Windows (State.Active_Window).Title_Stale
                   then
                      State.Windows (State.Active_Window).Class := Active_Class;
@@ -331,11 +338,6 @@ package body Hyprland.State is
                      State.Windows (State.Active_Window).Title_Stale := False;
                   end if;
                end;
-
-            when Fullscreen =>
-               --  0 / 1
-               State.Fullscreen :=
-                 (if (+Msg.Msg_Body) = "1" then True else False);
 
             when Createworkspacev2 =>
                --  Workspace_Id, Workspace_Name
@@ -537,4 +539,33 @@ package body Hyprland.State is
       end if;
    end Move_Window;
 
+   ----------------
+   -- Set_Layout --
+   ----------------
+   procedure Set_Layout
+     (State   : in out Hyprland_State; Keyboard : String; Layout : String;
+      Variant :        String)
+   is
+      Result : constant String :=
+        Hyprland.Protocol.Send_Unchecked
+          (Hypr    => State.Connection.all,
+           Command =>
+             "[[BATCH]]" & "j/keyword input:kb_variant  , ;" &
+             "j/keyword input:kb_layout us," & Layout & ";" &
+             "j/keyword input:kb_variant  ," & Variant & ";" &
+             "j/switchxkblayout " & Keyboard & " 1");
+   begin
+      --  The result should be four 'ok's separated by three LFs each
+      --!pp off
+      if Result /=
+         "ok" & ASCII.LF & ASCII.LF & ASCII.LF
+       & "ok" & ASCII.LF & ASCII.LF & ASCII.LF
+       & "ok" & ASCII.LF & ASCII.LF & ASCII.LF
+       & "ok"
+      then
+         Put_Debug (Result);
+         raise Request_Failed with Result;
+      end if;
+      --!pp on
+   end Set_Layout;
 end Hyprland.State;

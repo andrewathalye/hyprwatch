@@ -179,21 +179,17 @@ package body Hyprland.Protocol is
           (Msg_Id => Hypr2_Message_Id'Value (+Msg_Id), Msg_Body => Msg_Body);
    end Receive_Message;
 
-   ------------------
-   -- Send_Message --
-   ------------------
-
-   function Send_Message
-     (Hypr      : in out Hyprland_Connection; Id : Hypr1_Message_Id;
-      Arguments :        String := "") return String
+   --------------------
+   -- Send_Unchecked --
+   --------------------
+   function Send_Unchecked
+     (Hypr : in out Hyprland_Connection; Command : String) return String
    is
-
       pragma Unreferenced (Hypr);
 
       use GNAT.Sockets;
 
-      Buf : Ada.Strings.Unbounded.Unbounded_String;
-
+      Buf    : Ada.Strings.Unbounded.Unbounded_String;
       Socket : GNAT.Sockets.Socket_Type;
       Stream : GNAT.Sockets.Stream_Access;
 
@@ -207,23 +203,12 @@ package body Hyprland.Protocol is
 
       Stream := GNAT.Sockets.Stream (Socket);
 
-      --  Request JSON format
-      Ada.Strings.Unbounded.Append (Buf, "j/");
-      Ada.Strings.Unbounded.Append
-        (Buf, Ada.Characters.Handling.To_Lower (Id'Image));
-
-      if Arguments'Length > 0 then
-         Ada.Strings.Unbounded.Append (Buf, " " & Arguments);
-      end if;
-
-      Put_Debug (+Buf);
+      Put_Debug (Command);
 
       --  Send command
-      String'Write (Stream, +Buf);
+      String'Write (Stream, Command);
 
       --  Read response
-      Buf := Ada.Strings.Unbounded.Null_Unbounded_String;
-
       declare
 
          C : Character;
@@ -242,6 +227,28 @@ package body Hyprland.Protocol is
       Close_Socket (Socket);
 
       return +Buf;
+   end Send_Unchecked;
+
+   ------------------
+   -- Send_Message --
+   ------------------
+
+   function Send_Message
+     (Hypr      : in out Hyprland_Connection; Id : Hypr1_Message_Id;
+      Arguments :        String := "") return String
+   is
+      Buf : Ada.Strings.Unbounded.Unbounded_String;
+   begin
+      --  Request JSON format
+      Ada.Strings.Unbounded.Append (Buf, "j/");
+      Ada.Strings.Unbounded.Append
+        (Buf, Ada.Characters.Handling.To_Lower (Id'Image));
+
+      if Arguments'Length > 0 then
+         Ada.Strings.Unbounded.Append (Buf, " " & Arguments);
+      end if;
+
+      return Send_Unchecked (Hypr, +Buf);
    end Send_Message;
 
 end Hyprland.Protocol;

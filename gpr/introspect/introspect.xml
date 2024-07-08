@@ -8,6 +8,11 @@
    </interface>
 
    <interface name="tk.zenithseeker.hyprwatch">
+      <!-- Signal sent when Hyprland updates Hypr2 -->
+      <signal name="HyprUpdate">
+         <arg name="json" type="s"/>
+      </signal>
+
       <!-- Get all workspaces as coordinate pairs -->
       <method name="GetWorkspaces">
          <arg name="workspaces" type="a(qq)" direction="out"/>
@@ -25,6 +30,13 @@
          <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
       </method>
 
+      <!-- Move a window (or 0 for default) to (x,y) -->
+      <method name="MoveWindow">
+         <arg name="window_id" type="u" direction="in"/>
+         <arg name="workspace" type="(qq)" direction="in"/>
+         <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
+      </method>
+
       <!-- Move a window (or 0 for default) l/r/u/d -->
       <method name="MoveWindowRel">
          <arg name="window_id" type="u" direction="in"/>
@@ -32,11 +44,10 @@
          <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
       </method>
 
-      <!-- Set `keyboard` (or "" for the default) to `layout: (name, variant)`, with optional pretty name `layout_pretty`  -->
+      <!-- Set `keyboard` (or "" for the default) to `layout: (name, variant)` -->
       <method name="UpdateKeyboardLayout">
          <arg name="keyboard" type="s" direction="in"/>
          <arg name="layout" type="(ss)" direction="in"/>
-         <arg name="layout_pretty" type="s" direction="in"/>
          <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
       </method>
    </interface>

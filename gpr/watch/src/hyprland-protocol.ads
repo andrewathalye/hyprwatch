@@ -60,6 +60,13 @@ package Hyprland.Protocol is
      (Hypr : in out Hyprland_Connection) return Hypr2_Message;
    --  Reads a message from the Hyprland connection (blocking).
 
+   function Send_Unchecked
+     (Hypr : in out Hyprland_Connection; Command : String) return String;
+   --  Sends an arbitrary command to Hyprland (synchronous, blocking)
+   --  Returns Hypr1’s response
+   --  This in UNCHECKED and you may crash the compositor if not careful.
+   --  `Send_Message` is recommended in the general case.
+
    function Send_Message
      (Hypr      : in out Hyprland_Connection; Id : Hypr1_Message_Id;
       Arguments :        String := "") return String;
