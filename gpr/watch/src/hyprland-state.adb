@@ -5,6 +5,7 @@ with Ada.Unchecked_Deallocation;
 with GNATCOLL.JSON;
 with Hyprland.State;
 
+with String_Utils;
 with Debug; use Debug;
 
 package body Hyprland.State is
@@ -53,24 +54,6 @@ package body Hyprland.State is
 
       return Result;
    end Parse_Args;
-
-   --  Strip a leading space if present
-   function Strip_Space (Item : String) return String;
-
-   function Strip_Space (Item : String) return String is
-   begin
-      if Item (Item'First) = ' ' then
-         if Item'Length = 1 then
-            return "";
-
-         else
-            return Item (Item'First + 1 .. Item'Last);
-         end if;
-
-      else
-         return Item;
-      end if;
-   end Strip_Space;
 
    ---------------
    -- Accessors --
@@ -508,7 +491,7 @@ package body Hyprland.State is
           (Hypr      => State.Connection.all, Id => Dispatch,
            Arguments =>
              "workspace " &
-             Strip_Space (Hyprland.State_Impl.Image (Workspace)));
+             String_Utils.Strip_Space (Hyprland.State_Impl.Image (Workspace)));
 
    begin
       if Result /= "ok" then
@@ -530,8 +513,9 @@ package body Hyprland.State is
           (Hypr      => State.Connection.all, Id => Dispatch,
            Arguments =>
              "movetoworkspace " &
-             Strip_Space (Hyprland.State_Impl.Image (Destination)) & "," &
-             Hyprland.State_Impl.To_Selector (Window));
+             String_Utils.Strip_Space
+               (Hyprland.State_Impl.Image (Destination)) &
+             "," & Hyprland.State_Impl.To_Selector (Window));
 
    begin
       if Result /= "ok" then

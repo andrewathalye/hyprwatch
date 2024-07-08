@@ -4,6 +4,7 @@ with Ada.Characters.Handling;
 with Interfaces;
 use type Interfaces.Unsigned_32;
 use type Interfaces.Integer_32;
+with String_Utils;
 
 package body Hyprland.State_Impl is
 
@@ -30,19 +31,23 @@ package body Hyprland.State_Impl is
       use Unsigned_32_IO;
 
       Prefix : constant String  := "address:0x";
-      Result : String (1 .. 11) := "16#0000000#";
-      --  TODO Check whether it can actually take the full 12 bytes
-
+      Buf    : String (1 .. 12) := " 16#0000000#";
+      --  The result may be up to 12 characters long
+      --  (in practice, 11 or 12)
    begin
       --  Print hexadecimal representation of Item
-      Put (Result, Interfaces.Unsigned_32 (Item), 16);
+      Put (Buf, Interfaces.Unsigned_32 (Item), 16);
 
       --  Strip 16#...# prefix and suffix
       --  Also make lowercase for Hyprland
-      return
-        Prefix &
-        Ada.Characters.Handling.To_Lower
-          (Result (Result'First + 3 .. Result'Last - 1));
+      declare
+         Result : constant String := String_Utils.Strip_Space (Buf);
+      begin
+         return
+           Prefix &
+           Ada.Characters.Handling.To_Lower
+             (Result (Result'First + 3 .. Result'Last - 1));
+      end;
    end To_Selector;
 
    function Is_Special (Item : Hyprland_Workspace_Id) return Boolean is
