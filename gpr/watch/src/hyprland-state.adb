@@ -491,7 +491,8 @@ package body Hyprland.State is
           (Hypr      => State.Connection.all, Id => Dispatch,
            Arguments =>
              "workspace " &
-             String_Utils.Strip_Space (Hyprland.State_Impl.Image (Workspace)));
+             String_Utils.Strip_Spaces
+               (Hyprland.State_Impl.Image (Workspace)));
 
    begin
       if Result /= "ok" then
@@ -513,7 +514,7 @@ package body Hyprland.State is
           (Hypr      => State.Connection.all, Id => Dispatch,
            Arguments =>
              "movetoworkspace " &
-             String_Utils.Strip_Space
+             String_Utils.Strip_Spaces
                (Hyprland.State_Impl.Image (Destination)) &
              "," & Hyprland.State_Impl.To_Selector (Window));
 

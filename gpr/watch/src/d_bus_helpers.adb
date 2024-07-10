@@ -75,12 +75,12 @@ package body D_Bus_Helpers is
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type);
 
-   Move_Window_In : constant String := "u(qq)";
+   Move_Window_In : constant String := "t(qq)";
    procedure Move_Window
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type);
 
-   Move_Window_Rel_In : constant String := "us";
+   Move_Window_Rel_In : constant String := "ts";
    procedure Move_Window_Rel
      (Request :     D_Bus.Messages.Message_Type;
       Reply   : out D_Bus.Messages.Message_Type);
@@ -165,8 +165,8 @@ package body D_Bus_Helpers is
 
          Parameters : constant D_Bus.Arguments.Argument_List_Type     :=
            D_Bus.Messages.Get_Arguments (Request);
-         W_D_Bus    : constant D_Bus.Arguments.Basic.U_Int32_Type     :=
-           D_Bus.Arguments.Basic.U_Int32_Type (Parameters.First_Element);
+         W_D_Bus    : constant D_Bus.Arguments.Basic.U_Int64_Type     :=
+           D_Bus.Arguments.Basic.U_Int64_Type (Parameters.First_Element);
          WS_D_Bus   : constant D_Bus.Arguments.Containers.Struct_Type :=
            D_Bus.Arguments.Containers.Struct_Type (Parameters.Last_Element);
 
@@ -222,7 +222,7 @@ package body D_Bus_Helpers is
       Arguments         : constant D_Bus.Arguments.Argument_List_Type :=
         D_Bus.Messages.Get_Arguments (Request);
 
-      Window    : D_Bus.Arguments.Basic.U_Int32_Type;
+      Window    : D_Bus.Arguments.Basic.U_Int64_Type;
       Direction : D_Bus.Arguments.Basic.String_Type;
 
       Ada_Window    : Hyprland.State.Hyprland_Window_Id;
@@ -244,7 +244,7 @@ package body D_Bus_Helpers is
          return;
       end if;
 
-      Window := D_Bus.Arguments.Basic.U_Int32_Type (Arguments.First_Element);
+      Window := D_Bus.Arguments.Basic.U_Int64_Type (Arguments.First_Element);
       Direction := D_Bus.Arguments.Basic.String_Type (Arguments.Last_Element);
 
       Ada_Window := Hyprland.State_Impl.Value (Window.To_String);

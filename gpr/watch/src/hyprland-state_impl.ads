@@ -28,9 +28,12 @@ package Hyprland.State_Impl is
    No_Workspace : constant Hyprland_Workspace_Id;
 
 private
-   type Hyprland_Window_Id is new Interfaces.Unsigned_32;
+   type Hyprland_Window_Id is new Interfaces.Unsigned_64;
+   --  Note: Type unconfirmed but 64-bit values have
+   --  been observed.
 
    type Hyprland_Workspace_Id is new Interfaces.Integer_32;
+   --  Note: Type confirmed for Hyprland v0.41.1
 
    No_Window    : constant Hyprland_Window_Id    := 0; --  Invalid window id
    No_Workspace : constant Hyprland_Workspace_Id := 0; --  Invalid workspace id

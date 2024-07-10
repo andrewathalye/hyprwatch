@@ -1,16 +1,15 @@
 package body String_Utils is
-   function Strip_Space (Item : String) return String is
+   function Strip_Spaces (Item : String) return String is
+      Index : Natural := Item'First;
    begin
-      if Item (Item'First) = ' ' then
-         if Item'Length = 1 then
-            return "";
+      while Item (Index) = ' ' loop
+         Index := Index + 1;
+      end loop;
 
-         else
-            return Item (Item'First + 1 .. Item'Last);
-         end if;
-
+      if Item'Length = 1 then
+         return "";
       else
-         return Item;
+         return Item (Index .. Item'Last);
       end if;
-   end Strip_Space;
+   end Strip_Spaces;
 end String_Utils;

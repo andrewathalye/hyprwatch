@@ -1,5 +1,4 @@
-with System;
-with Ada.Unchecked_Conversion;
+with System.Storage_Elements;
 
 with D_Bus.Arguments.Basic;
 
@@ -22,14 +21,8 @@ is
    --  ELF symbol and interpreting it as a number.
 
    function To_Natural (S : aliased Symbol) return Natural is
-
-      type Address_Mod is mod System.Memory_Size;
-
-      function Convert is new Ada.Unchecked_Conversion
-        (System.Address, Address_Mod);
-
    begin
-      return Natural (Convert (S'Address));
+      return Natural (System.Storage_Elements.To_Integer (S'Address));
    end To_Natural;
 
    Introspect_XML_Size : aliased Symbol with
