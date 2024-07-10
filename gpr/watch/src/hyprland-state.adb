@@ -73,6 +73,14 @@ package body Hyprland.State is
      (State : Hyprland_State) return Hyprland_Workspace_Id is
      (State.Active_Workspace);
 
+   function Keyboard_Layout
+     (State : Hyprland_State) return Ada.Strings.Unbounded.Unbounded_String is
+     (State.Keyboard_Layout);
+
+   function Keyboard_Variant
+     (State : Hyprland_State) return Ada.Strings.Unbounded.Unbounded_String is
+     (State.Keyboard_Variant);
+
    -------------
    -- Connect --
    -------------
@@ -371,6 +379,13 @@ package body Hyprland.State is
                null;
                --  Note: We intentionally don’t do anything with this
 
+            when Activelayout =>
+               --  Keyboard_Name, Layout_Name
+               null;
+               --  Note TODO This is bugged in Hyprland right now, so
+               --  we can’t actually use any of these messages.
+               --  It’s still cause for a status update however.
+
             when Openwindow =>
                --  Window_Address, Workspace_Name, Window_Class, Window_Title
                declare
@@ -552,5 +567,10 @@ package body Hyprland.State is
          raise Request_Failed with Result;
       end if;
       --!pp on
+
+      State.Keyboard_Layout  :=
+        Ada.Strings.Unbounded.To_Unbounded_String (Layout);
+      State.Keyboard_Variant :=
+        Ada.Strings.Unbounded.To_Unbounded_String (Variant);
    end Set_Layout;
 end Hyprland.State;

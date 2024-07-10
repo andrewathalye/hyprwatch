@@ -77,6 +77,10 @@ package Hyprland.State is
    function Active_Window (State : Hyprland_State) return Hyprland_Window_Id;
    function Active_Workspace
      (State : Hyprland_State) return Hyprland_Workspace_Id;
+   function Keyboard_Layout
+     (State : Hyprland_State) return Ada.Strings.Unbounded.Unbounded_String;
+   function Keyboard_Variant
+     (State : Hyprland_State) return Ada.Strings.Unbounded.Unbounded_String;
 
    -------------------
    --  Subprograms  --
@@ -126,6 +130,8 @@ private
       Active_Window    : Hyprland_Window_Id    := No_Window;
       Active_Workspace : Hyprland_Workspace_Id := No_Workspace;
 
-      --      Primary_Keyboard : Ada.Strings.Unbounded.Unbounded_String;
+      --  TODO add keyboard name
+      Keyboard_Layout  : Ada.Strings.Unbounded.Unbounded_String;
+      Keyboard_Variant : Ada.Strings.Unbounded.Unbounded_String;
    end record;
 end Hyprland.State;

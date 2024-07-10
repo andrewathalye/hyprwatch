@@ -206,6 +206,9 @@ package body Hypr_Helpers is
       Result.Set_Field
         ("workspaces", Hypr_Helpers.Generate_Workspace_String (State));
 
+      Result.Set_Field ("keyboard_layout", State.Keyboard_Layout);
+      Result.Set_Field ("keyboard_variant", State.Keyboard_Variant);
+
       return Result;
    end Generate_Status_JSON;
 
