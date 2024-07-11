@@ -291,6 +291,8 @@ package body Hyprland.State is
                --  Note: But not associated with a window id and
                --  activewindowv2 comes after, so our own record-keeping
                --  would assign these to the wrong window
+
+               Updated := False; --  Nothing to report until `Activewindowv2`
                declare
 
                   Args : constant Unbounded_String_Array :=
@@ -312,22 +314,23 @@ package body Hyprland.State is
                      Window_Id := Value ("16#" & (+Msg.Msg_Body) & "#");
                   exception
                      when Constraint_Error =>
+                        --  This occurs when no window is active
                         Window_Id := Hyprland.State.No_Window;
                   end;
-
-                  State.Active_Window := Window_Id;
 
                   --  Update the class and title if the window was marked stale
                   --  Skip this if the Openwindow event has not yet been fired.
 
-                  if State.Windows.Contains (State.Active_Window)
-                    and then State.Windows (State.Active_Window).Title_Stale
+                  if State.Windows.Contains (Window_Id)
+                    and then State.Windows (Window_Id).Title_Stale
                   then
-                     State.Windows (State.Active_Window).Class := Active_Class;
-                     State.Windows (State.Active_Window).Title := Active_Title;
+                     State.Windows (Window_Id).Class := Active_Class;
+                     State.Windows (Window_Id).Title := Active_Title;
 
-                     State.Windows (State.Active_Window).Title_Stale := False;
+                     State.Windows (Window_Id).Title_Stale := False;
                   end if;
+
+                  State.Active_Window := Window_Id;
                end;
 
             when Createworkspacev2 =>
@@ -357,6 +360,20 @@ package body Hyprland.State is
                     Value (+(Args (1)));
 
                begin
+                  --  Disassociate all windows from this workspace
+                  for W of State.Windows loop
+                     if W.Workspace = Workspace_Id then
+                        W.Workspace := No_Workspace;
+                     end if;
+                  end loop;
+
+                  --  Sanity check
+                  if State.Active_Workspace = Workspace_Id then
+                     raise Invalid_State
+                       with "Active workspace was just removed.";
+                  end if;
+
+                  --  Delete the actual workspace object
                   State.Workspaces.Delete (Workspace_Id);
                end;
 
@@ -382,7 +399,7 @@ package body Hyprland.State is
             when Activelayout =>
                --  Keyboard_Name, Layout_Name
                null;
-               --  Note TODO This is bugged in Hyprland right now, so
+               --  Note This is bugged in Hyprland right now, so
                --  we can’t actually use any of these messages.
                --  It’s still cause for a status update however.
 
@@ -413,13 +430,16 @@ package body Hyprland.State is
                         goto Found_Workspace;
                      end if;
                   end loop;
-                  raise Program_Error
+                  raise Invalid_State
                     with "Could not find workspace with ID " &
                     (+Workspace_Name);
                   <<Found_Workspace>>
+
+                  --  Workspace found, fill in the remaining fields
                   Window.Class := Window_Class;
                   Window.Title := Window_Title;
 
+                  --  Finally add the window to the global list
                   State.Windows.Insert (Window_Id, Window);
                   State.Workspaces (Window.Workspace).Windows.Append
                     (Window_Id);
@@ -465,6 +485,10 @@ package body Hyprland.State is
 
                   State.Windows (Window_Id).Workspace := Workspace_Id;
                   State.Workspaces (Workspace_Id).Windows.Append (Window_Id);
+
+                  --  TODO: This event has caused crashes before. Try to
+                  --  identify the source of the desync. Log analysis was
+                  --  inconclusive in a recent cause.
                end;
 
             when Windowtitle =>
@@ -475,11 +499,14 @@ package body Hyprland.State is
                     Value ("16#" & (+Msg.Msg_Body) & "#");
 
                begin
-                  --  This is also sent when a window has just been created,
-                  --  in which case there is no need to parse it
+                  --  This event provides no actual data, just metadata
+                  --  about an upcoming `Activewindow` event
+                  Updated := False;
+
+                  --  If the window already exists, set a flag so that the next
+                  --  `Activewindow` and `Activewindowv2` call chain will cause
+                  --  the title to be updated.
                   if State.Windows.Contains (Window_Id) then
-                     --  The title will be refreshed when it is once again
-                     --  the active window
                      State.Windows (Window_Id).Title_Stale := True;
                   end if;
                end;

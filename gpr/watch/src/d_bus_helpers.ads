@@ -27,7 +27,6 @@ package D_Bus_Helpers is
    --  Return the Service’s underlying D_Bus connection.
 
    procedure Disconnect (Service : in out Hypr_Service_Type) is null;
-   --  TODO (not needed at the moment)
 
 private
    type Hypr_Service_Type is new D_Bus.Service.Object with record

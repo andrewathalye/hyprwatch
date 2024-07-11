@@ -131,6 +131,7 @@ private
       Active_Workspace : Hyprland_Workspace_Id := No_Workspace;
 
       --  TODO add keyboard name
+      --  TODO this is also global across keyboards
       Keyboard_Layout  : Ada.Strings.Unbounded.Unbounded_String;
       Keyboard_Variant : Ada.Strings.Unbounded.Unbounded_String;
    end record;
