@@ -1,6 +1,7 @@
 with D_Bus.Arguments.Basic;
 with D_Bus.Arguments.Containers;
 
+with D_Bus_Helpers.Impl; use D_Bus_Helpers.Impl;
 with Hypr_Helpers;
 
 with Debug; use Debug;

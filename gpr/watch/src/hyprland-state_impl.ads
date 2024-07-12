@@ -41,11 +41,10 @@ private
    --  TODO nothing actually wrong, but this relies on Hyprland implementation
    --  details and should be the first thing to check if anything breaks
 
-   type Hyprland_Monitor_Id is range -1 .. Interfaces.Integer_32'Last
-   with
-      Size => 32;
-   --  Note: Type is undocumented but assumed to be int32_t
-   --  As of v0.41.1
+   type Hyprland_Monitor_Id is range -1 .. Interfaces.Integer_32'Last with
+     Size => 32;
+     --  Note: Type is undocumented but assumed to be int32_t
+     --  As of v0.41.1
 
    type Hyprland_Workspace_Id is new Interfaces.Integer_32;
    --  Note: Type confirmed via documentation as (1 .. 2 147 483 647)

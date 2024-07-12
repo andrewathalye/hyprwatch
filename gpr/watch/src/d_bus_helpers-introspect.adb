@@ -2,6 +2,8 @@ with System.Storage_Elements;
 
 with D_Bus.Arguments.Basic;
 
+with D_Bus_Helpers.Impl; use D_Bus_Helpers.Impl;
+
 with Debug; use Debug;
 
 procedure D_Bus_Helpers.Introspect

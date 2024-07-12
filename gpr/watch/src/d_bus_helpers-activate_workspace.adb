@@ -1,6 +1,7 @@
 with D_Bus.Arguments.Basic;
 with D_Bus.Arguments.Containers;
 
+with D_Bus_Helpers.Impl; use D_Bus_Helpers.Impl;
 with Hypr_Helpers;
 
 with Debug; use Debug;
@@ -38,12 +39,12 @@ begin
         (X =>
            Workspace_2D_Axis
              (D_Bus.Arguments.Basic.To_Ada
-                (D_Bus.Arguments.Basic.U_Int16_Type
+                (D_Bus.Arguments.Basic.Byte_Type
                    (Workspace_D_Bus.First_Element))),
          Y =>
            Workspace_2D_Axis
              (D_Bus.Arguments.Basic.To_Ada
-                (D_Bus.Arguments.Basic.U_Int16_Type
+                (D_Bus.Arguments.Basic.Byte_Type
                    (Workspace_D_Bus.Last_Element))));
    exception
       when Constraint_Error =>

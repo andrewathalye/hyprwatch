@@ -15,12 +15,12 @@
 
       <!-- Get all workspaces as coordinate pairs -->
       <method name="GetWorkspaces">
-         <arg name="workspaces" type="a(qq)" direction="out"/>
+         <arg name="workspaces" type="a(yy)" direction="out"/>
       </method>
 
       <!-- Go to workspace (x,y) -->
       <method name="ActivateWorkspace">
-         <arg name="workspace" type="(qq)"/>
+         <arg name="workspace" type="(yy)"/>
          <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
       </method>
 
@@ -33,7 +33,7 @@
       <!-- Move a window (or 0 for default) to (x,y) -->
       <method name="MoveWindow">
          <arg name="window_id" type="t" direction="in"/>
-         <arg name="workspace" type="(qq)" direction="in"/>
+         <arg name="workspace" type="(yy)" direction="in"/>
          <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
       </method>
 
@@ -49,6 +49,11 @@
          <arg name="keyboard" type="s" direction="in"/>
          <arg name="layout" type="(ss)" direction="in"/>
          <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
+      </method>
+
+      <!-- Print out debugging data. The result is unstructured. -->
+      <method name="DumpData">
+         <arg name="data" type="s" direction="out"/>
       </method>
    </interface>
 </node>

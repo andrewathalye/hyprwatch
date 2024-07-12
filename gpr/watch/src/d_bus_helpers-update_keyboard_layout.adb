@@ -2,6 +2,7 @@ with D_Bus.Arguments.Basic;
 with D_Bus.Arguments.Containers;
 
 with Hyprland.State;
+with D_Bus_Helpers.Impl; use D_Bus_Helpers.Impl;
 
 with Debug; use Debug;
 
