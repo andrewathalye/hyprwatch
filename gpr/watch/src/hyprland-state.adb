@@ -719,12 +719,8 @@ package body Hyprland.State is
                         Workspace_Id : constant Hyprland_Workspace_Id :=
                           Find_Workspace_Id (State, Workspace_Name);
                      begin
-                        --  If the special workspace is still attached to
+                        --  If the special workspace is attached to
                         --  an old monitor, remove it.
-                        --
-                        --  There are various edge cases where it would still
-                        --  be attached (e.g. switching between monitors while
-                        --  the overlay is open).
 
                         if State.Workspaces (Workspace_Id).Monitor /=
                           No_Monitor
@@ -738,10 +734,6 @@ package body Hyprland.State is
                         State.Active_Workspace := Workspace_Id;
                      end;
                   else --  If returning to a normal workspace
-                     --  Orphan the special workspace
-                     Remove_Workspace_From_Monitor
-                       (State, State.Active_Workspace);
-
                      --  Note: This code path is inefficient
                      --  Hyprland doesn’t tell us what workspace is being
                      --  activated when the special workspace is closed.
