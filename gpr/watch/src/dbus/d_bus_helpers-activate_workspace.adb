@@ -21,12 +21,8 @@ begin
 
    --  Check signature
    if Request_Signature /= Activate_Workspace_In then
-      Reply :=
-        D_Bus.Messages.New_Error
-          (Reply_To      => Request, Error_Name => Signature_Error,
-           Error_Message =>
-             ASCII.Quotation & Request_Signature & ASCII.Quotation & " != " &
-             ASCII.Quotation & Activate_Workspace_In & ASCII.Quotation);
+      Raise_Signature_Error
+        (Request, Reply, Request_Signature, Activate_Workspace_In);
       return;
    end if;
 
@@ -55,8 +51,6 @@ begin
                 "The arguments could not be parsed as a 2D workspace.");
          return;
    end;
-
-   Put_Debug (Image (Workspace));
 
    Global_Service.State.Activate_Workspace (Hypr_Helpers.Convert (Workspace));
 

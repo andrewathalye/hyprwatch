@@ -47,12 +47,7 @@ begin
 
    --  Check signature
    if Request_Signature /= Introspect_In then
-      Reply :=
-        D_Bus.Messages.New_Error
-          (Reply_To      => Request, Error_Name => Signature_Error,
-           Error_Message =>
-             ASCII.Quotation & Request_Signature & ASCII.Quotation & " != " &
-             ASCII.Quotation & Introspect_In & ASCII.Quotation);
+      Raise_Signature_Error (Request, Reply, Request_Signature, Introspect_In);
       return;
    end if;
 
