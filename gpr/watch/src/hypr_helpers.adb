@@ -187,22 +187,14 @@ package body Hypr_Helpers is
       then
          Result.Set_Field ("class", "");
          Result.Set_Field ("title", "");
-
-         --  Take 'workspace' from the generic focused workspace
-         Result.Set_Field
-           ("workspace", Hypr_Helpers.Transform (State.Active_Workspace));
-
       else
          Active_Window := State.Windows.Element (State.Active_Window);
          Result.Set_Field ("class", Active_Window.Class);
          Result.Set_Field ("title", Truncate (Active_Window.Title));
-
-         --  Take 'workspace' from the currently-focused window
-         --  (more accurate)
-         Result.Set_Field
-           ("workspace", Hypr_Helpers.Transform (Active_Window.Workspace));
       end if;
 
+      Result.Set_Field
+        ("workspace", Hypr_Helpers.Transform (State.Active_Workspace));
       Result.Set_Field
         ("workspaces", Hypr_Helpers.Generate_Workspace_String (State));
 

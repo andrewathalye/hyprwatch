@@ -1,5 +1,6 @@
 pragma Ada_2022;
 
+with Ada.Exceptions;
 with Ada.Unchecked_Deallocation;
 
 with GNATCOLL.JSON;
@@ -10,7 +11,6 @@ with Debug; use Debug;
 
 package body Hyprland.State is
    --  Intentionally blank Hyprland_State
-
    Blank_State : constant Hyprland_State := (others => <>);
 
    procedure Deallocate is new Ada.Unchecked_Deallocation
@@ -55,9 +55,183 @@ package body Hyprland.State is
       return Result;
    end Parse_Args;
 
+   Id_Search_Failure : exception;
+
+   function Find_Monitor_Id
+     (State : Hyprland_State; Name : Ada.Strings.Unbounded.Unbounded_String)
+      return Hyprland_Monitor_Id;
+   --  Find a monitor by name
+   --  Raises `Id_Search_Failure`
+
+   function Find_Monitor_Id
+     (State : Hyprland_State; Name : Ada.Strings.Unbounded.Unbounded_String)
+      return Hyprland_Monitor_Id
+   is
+      use Ada.Strings.Unbounded;
+   begin
+      for M of State.Monitors loop
+         if M.Name = Name then
+            return M.Id;
+         end if;
+      end loop;
+
+      raise Id_Search_Failure
+        with "Could not find monitor with name " & (+Name);
+   end Find_Monitor_Id;
+
+   function Find_Workspace_Id
+     (State : Hyprland_State; Name : Ada.Strings.Unbounded.Unbounded_String)
+      return Hyprland_Workspace_Id;
+   --  Find a workspace by name
+   --  Raises `Id_Search_Failure`
+
+   function Find_Workspace_Id
+     (State : Hyprland_State; Name : Ada.Strings.Unbounded.Unbounded_String)
+      return Hyprland_Workspace_Id
+   is
+      use Ada.Strings.Unbounded;
+   begin
+      for WS of State.Workspaces loop
+         if WS.Name = Name then
+            return WS.Id;
+         end if;
+      end loop;
+
+      raise Id_Search_Failure
+        with "Could not find workspace with name " & (+Name);
+   end Find_Workspace_Id;
+
+   procedure Remove_Workspace_From_Monitor
+     (State : in out Hyprland_State; Workspace : Hyprland_Workspace_Id);
+
+   procedure Remove_Workspace_From_Monitor
+     (State : in out Hyprland_State; Workspace : Hyprland_Workspace_Id)
+   is
+   begin
+      pragma Assert (Workspace /= No_Workspace);
+      pragma Assert (State.Workspaces (Workspace).Monitor /= No_Monitor);
+
+      State.Monitors (State.Workspaces (Workspace).Monitor).Workspaces.Delete
+        (State.Monitors (State.Workspaces (Workspace).Monitor).Workspaces
+           .Find_Index
+           (Workspace));
+
+      --  Orphan the monitor
+      State.Workspaces (Workspace).Monitor := No_Monitor;
+   end Remove_Workspace_From_Monitor;
+
+   procedure Add_Workspace_To_Monitor
+     (State   : in out Hyprland_State; Workspace : Hyprland_Workspace_Id;
+      Monitor :        Hyprland_Monitor_Id);
+
+   procedure Add_Workspace_To_Monitor
+     (State   : in out Hyprland_State; Workspace : Hyprland_Workspace_Id;
+      Monitor :        Hyprland_Monitor_Id)
+   is
+   begin
+      pragma Assert (Workspace /= No_Workspace);
+      pragma Assert (Monitor /= No_Monitor);
+      pragma Assert (State.Workspaces (Workspace).Monitor = No_Monitor);
+
+      State.Workspaces (Workspace).Monitor := Monitor;
+      State.Monitors (Monitor).Workspaces.Append (Workspace);
+   end Add_Workspace_To_Monitor;
+
+   procedure Remove_Window_From_Workspace
+     (State : in out Hyprland_State; Window : Hyprland_Window_Id);
+
+   procedure Remove_Window_From_Workspace
+     (State : in out Hyprland_State; Window : Hyprland_Window_Id)
+   is
+   begin
+      pragma Assert (Window /= No_Window);
+      pragma Assert (State.Windows (Window).Workspace /= No_Workspace);
+
+      State.Workspaces (State.Windows (Window).Workspace).Windows.Delete
+        (State.Workspaces (State.Windows (Window).Workspace).Windows.Find_Index
+           (Window));
+
+      --  Orphan the window
+      State.Windows (Window).Workspace := No_Workspace;
+   end Remove_Window_From_Workspace;
+
+   procedure Add_Window_To_Workspace
+     (State     : in out Hyprland_State; Window : Hyprland_Window_Id;
+      Workspace :        Hyprland_Workspace_Id);
+
+   procedure Add_Window_To_Workspace
+     (State     : in out Hyprland_State; Window : Hyprland_Window_Id;
+      Workspace :        Hyprland_Workspace_Id)
+   is
+   begin
+      pragma Assert (Window /= No_Window);
+      pragma Assert (Workspace /= No_Workspace);
+      pragma Assert (State.Windows (Window).Workspace = No_Workspace);
+
+      State.Windows (Window).Workspace := Workspace;
+      State.Workspaces (Workspace).Windows.Append (Window);
+   end Add_Window_To_Workspace;
+
+   function Hypr1_Active_Monitor
+     (State : in out Hyprland_State) return Hyprland_Monitor_Id;
+   function Hypr1_Active_Monitor
+     (State : in out Hyprland_State) return Hyprland_Monitor_Id
+   is
+      use GNATCOLL.JSON;
+      use Hyprland.State_Impl;
+
+      AW      : constant String     :=
+        Protocol.Send_Message (State.Connection.all, Activeworkspace);
+      AW_JSON : constant JSON_Value := Read (AW);
+   begin
+      return Value (Integer'(AW_JSON.Get ("monitorID"))'Image);
+   end Hypr1_Active_Monitor;
+
+   function Hypr1_Active_Workspace
+     (State : in out Hyprland_State) return Hyprland_Workspace_Id;
+   function Hypr1_Active_Workspace
+     (State : in out Hyprland_State) return Hyprland_Workspace_Id
+   is
+      use GNATCOLL.JSON;
+      use Hyprland.State_Impl;
+
+      AW      : constant String     :=
+        Protocol.Send_Message (State.Connection.all, Activeworkspace);
+      AW_JSON : constant JSON_Value := Read (AW);
+   begin
+      return Value (Integer'(AW_JSON.Get ("id"))'Image);
+   end Hypr1_Active_Workspace;
+
+   function Hypr1_Find_Monitor_Name
+     (State : in out Hyprland_State; Monitor : Hyprland_Monitor_Id)
+      return Ada.Strings.Unbounded.Unbounded_String;
+
+   function Hypr1_Find_Monitor_Name
+     (State : in out Hyprland_State; Monitor : Hyprland_Monitor_Id)
+      return Ada.Strings.Unbounded.Unbounded_String
+   is
+      use GNATCOLL.JSON;
+      use Hyprland.State_Impl;
+
+      M      : constant String     :=
+        Protocol.Send_Message (State.Connection.all, Monitors);
+      M_JSON : constant JSON_Value := Read (M);
+   begin
+      pragma Assert (Monitor /= No_Monitor);
+
+      for Object of JSON_Array'(M_JSON.Get) loop
+         if Value (Integer'(Object.Get ("id"))'Image) = Monitor then
+            return Object.Get ("name");
+         end if;
+      end loop;
+      raise Id_Search_Failure with "Couldn’t find monitor name.";
+   end Hypr1_Find_Monitor_Name;
+
    ---------------
    -- Accessors --
    ---------------
+   function Monitors (State : Hyprland_State) return Hyprland_Monitor_List is
+     (State.Monitors);
 
    function Workspaces
      (State : Hyprland_State) return Hyprland_Workspace_List is
@@ -66,12 +240,16 @@ package body Hyprland.State is
    function Windows (State : Hyprland_State) return Hyprland_Window_List is
      (State.Windows);
 
-   function Active_Window (State : Hyprland_State) return Hyprland_Window_Id is
-     (State.Active_Window);
+   function Active_Monitor
+     (State : Hyprland_State) return Hyprland_Monitor_Id is
+     (State.Active_Monitor);
 
    function Active_Workspace
      (State : Hyprland_State) return Hyprland_Workspace_Id is
      (State.Active_Workspace);
+
+   function Active_Window (State : Hyprland_State) return Hyprland_Window_Id is
+     (State.Active_Window);
 
    function Keyboard_Layout
      (State : Hyprland_State) return Ada.Strings.Unbounded.Unbounded_String is
@@ -100,9 +278,32 @@ package body Hyprland.State is
       --  We try to dynamically grab info from Hyprland’s Hypr2 socket where
       --  possible, but when first starting there is no choice but to
       --  use Hypr1.
+
+      Read_Monitors :
+      declare
+         use GNATCOLL.JSON;
+
+         M      : constant String     :=
+           Protocol.Send_Message
+             (Hypr => State.Connection.all, Id => Monitors);
+         M_JSON : constant JSON_Value := Read (M);
+      begin
+         for Object of JSON_Array'(M_JSON.Get) loop
+            declare
+               use Hyprland.State_Impl;
+
+               Monitor : Hyprland_Monitor;
+            begin
+               Monitor.Id   := Value (Integer'(Object.Get ("id"))'Image);
+               Monitor.Name := Object.Get ("name");
+
+               State.Monitors.Insert (Monitor.Id, Monitor);
+            end;
+         end loop;
+      end Read_Monitors;
+
       Read_Workspaces :
       declare
-
          use GNATCOLL.JSON;
 
          W      : constant String     :=
@@ -113,18 +314,19 @@ package body Hyprland.State is
       begin
          for Object of JSON_Array'(W_JSON.Get) loop
             declare
-
                use Hyprland.State_Impl;
 
-               Workspace : Hyprland_Workspace;
-               Id        : constant Hyprland_Workspace_Id :=
+               Workspace_Id : constant Hyprland_Workspace_Id :=
                  Value (Integer'(Object.Get ("id"))'Image);
+               Monitor_Id   : constant Hyprland_Monitor_Id   :=
+                 Value (Integer'(Object.Get ("monitorID"))'Image);
 
+               Workspace : constant Hyprland_Workspace :=
+                 (Id   => Workspace_Id, Monitor => No_Monitor,
+                  Name => Object.Get ("name"), Windows => []);
             begin
-               Workspace.Id   := Id;
-               Workspace.Name := Object.Get ("name");
-
-               State.Workspaces.Insert (Id, Workspace);
+               State.Workspaces.Insert (Workspace_Id, Workspace);
+               Add_Workspace_To_Monitor (State, Workspace_Id, Monitor_Id);
             end;
          end loop;
       end Read_Workspaces;
@@ -142,6 +344,11 @@ package body Hyprland.State is
 
       begin
          State.Active_Workspace := Value (Integer'(W_JSON.Get ("id"))'Image);
+
+         --  Note: there is no separate 'activemonitor' call, so we use this
+         --  instead.
+         State.Active_Monitor :=
+           State.Workspaces (State.Active_Workspace).Monitor;
       end Read_Active_Workspace;
 
       Read_Windows :
@@ -260,8 +467,6 @@ package body Hyprland.State is
 
          Put_Debug (Msg.Msg_Id'Image & ": " & (+Msg.Msg_Body));
 
-         Updated := True;
-
          case Msg.Msg_Id is
             when Workspacev2 =>
                --  Workspace_Id, Workspace_Name
@@ -274,16 +479,39 @@ package body Hyprland.State is
 
                begin
                   State.Active_Workspace := Workspace_Id;
+                  Updated                := True;
                end;
+
             when Focusedmon =>
-               --  Monitor_Id, Workspace_Id
+               --  Monitor_Name, Workspace_Name
+               --  Note: Hyprland currently does not return info
+               --  about selected special workspaces. It is not
+               --  practical to retrieve this without a worst-case
+               --  two Hypr1 round trips, so this is currentlyç
+               --  unimplemented.
+               --
+               --  TODO
                declare
-                  Args         : constant Unbounded_String_Array :=
+                  Args           : constant Unbounded_String_Array :=
                     Parse_Args (Msg.Msg_Body, 2);
-                  Workspace_Id : constant Hyprland_Workspace_Id  :=
-                    Value (+(Args (2)));
+                  Monitor_Name   : constant Unbounded_String       := Args (1);
+                  Workspace_Name : constant Unbounded_String       := Args (2);
+
+                  Monitor_Id   : constant Hyprland_Monitor_Id   :=
+                    Find_Monitor_Id (State, Monitor_Name);
+                  Workspace_Id : constant Hyprland_Workspace_Id :=
+                    Find_Workspace_Id (State, Workspace_Name);
                begin
+                  --  Repair orphaned workspaces after `Monitorremoved`
+                  if State.Workspaces (Workspace_Id).Monitor = No_Monitor then
+                     Add_Workspace_To_Monitor
+                       (State, Workspace_Id, Monitor_Id);
+                  end if;
+
+                  State.Active_Monitor   := Monitor_Id;
                   State.Active_Workspace := Workspace_Id;
+
+                  Updated := True;
                end;
 
             when Activewindow =>
@@ -292,7 +520,6 @@ package body Hyprland.State is
                --  activewindowv2 comes after, so our own record-keeping
                --  would assign these to the wrong window
 
-               Updated := False; --  Nothing to report until `Activewindowv2`
                declare
 
                   Args : constant Unbounded_String_Array :=
@@ -321,20 +548,72 @@ package body Hyprland.State is
                   --  Update the class and title if the window was marked stale
                   --  Skip this if the Openwindow event has not yet been fired.
 
-                  if State.Windows.Contains (Window_Id)
-                    and then State.Windows (Window_Id).Title_Stale
-                  then
-                     State.Windows (Window_Id).Class := Active_Class;
-                     State.Windows (Window_Id).Title := Active_Title;
+                  if State.Windows.Contains (Window_Id) then
+                     --  Update the workspace
+                     State.Active_Workspace :=
+                       State.Windows (Window_Id).Workspace;
 
-                     State.Windows (Window_Id).Title_Stale := False;
+                     --  Update stale titles
+                     if State.Windows (Window_Id).Title_Stale then
+                        State.Windows (Window_Id).Class := Active_Class;
+                        State.Windows (Window_Id).Title := Active_Title;
+
+                        State.Windows (Window_Id).Title_Stale := False;
+                     end if;
                   end if;
 
                   State.Active_Window := Window_Id;
+                  Updated             := True;
+               end;
+
+            when Monitorremoved =>
+               --  Monitor_Name
+               declare
+                  Args         : constant Unbounded_String_Array :=
+                    Parse_Args (Msg.Msg_Body, 1);
+                  Monitor_Name : constant Unbounded_String       := Args (1);
+                  Monitor_Id   : constant Hyprland_Monitor_Id    :=
+                    Find_Monitor_Id (State, Monitor_Name);
+               begin
+                  --  Clear data for workspaces which were on that monitor
+                  --  These will be updated after a `Focusedmon`
+                  for WS of State.Workspaces loop
+                     if WS.Monitor = Monitor_Id then
+                        WS.Monitor := No_Monitor;
+                     end if;
+                  end loop;
+
+                  State.Monitors.Delete (Monitor_Id);
+                  Updated := True;
+               end;
+
+            when Monitoraddedv2 =>
+               --  Monitor_Id, Monitor_Name, Monitor_Description
+               --  TODO https://github.com/hyprwm/Hyprland/issues/6848
+               --  (Monitor_Name is currently incorrect, so we need to
+               --  fetch it via Hypr1)
+               declare
+                  Args         : constant Unbounded_String_Array :=
+                    Parse_Args (Msg.Msg_Body, 3);
+                  Monitor_Id   : constant Hyprland_Monitor_Id    :=
+                    Value (+Args (1));
+                  Monitor_Name : constant Unbounded_String       :=
+                    Hypr1_Find_Monitor_Name (State, Monitor_Id);
+                  --  Monitor_Description isn’t currently used
+               begin
+                  State.Monitors.Insert
+                    (Monitor_Id,
+                     Hyprland_Monitor'
+                       (Id         => Monitor_Id, Name => Monitor_Name,
+                        Workspaces => []));
+                  Updated := True;
                end;
 
             when Createworkspacev2 =>
                --  Workspace_Id, Workspace_Name
+               --  Note Hyprland doesn’t currently provide
+               --  the monitor associated with the workspace,
+               --  so it must be fetched synchronously
                declare
 
                   Args           : constant Unbounded_String_Array :=
@@ -344,10 +623,14 @@ package body Hyprland.State is
                   Workspace_Name : constant Unbounded_String       := Args (2);
 
                   Workspace : constant Hyprland_Workspace :=
-                    (Workspace_Id, Workspace_Name, others => <>);
+                    (Id   => Workspace_Id, Monitor => No_Monitor,
+                     Name => Workspace_Name, Windows => []);
 
                begin
                   State.Workspaces.Insert (Workspace_Id, Workspace);
+                  Add_Workspace_To_Monitor
+                    (State, Workspace_Id, Hypr1_Active_Monitor (State));
+                  Updated := True;
                end;
 
             when Destroyworkspacev2 =>
@@ -360,6 +643,8 @@ package body Hyprland.State is
                     Value (+(Args (1)));
 
                begin
+                  Remove_Workspace_From_Monitor (State, Workspace_Id);
+
                   --  Disassociate all windows from this workspace
                   for W of State.Windows loop
                      if W.Workspace = Workspace_Id then
@@ -367,14 +652,38 @@ package body Hyprland.State is
                      end if;
                   end loop;
 
-                  --  Sanity check
+                  --  Note: After resuming from hibernation or DPMS off
+                  --  it’s common for the current workspace (a temp
+                  --  workspace) to be removed.
+                  --
+                  --  The real active workspace isn’t provided, however,
+                  --  so we have to fetch it synchronously.
+
                   if State.Active_Workspace = Workspace_Id then
-                     raise Invalid_State
-                       with "Active workspace was just removed.";
+                     State.Active_Workspace := Hypr1_Active_Workspace (State);
                   end if;
 
                   --  Delete the actual workspace object
                   State.Workspaces.Delete (Workspace_Id);
+                  Updated := True;
+               end;
+
+            when Moveworkspacev2 =>
+               --  Workspace_Id, Workspace_Name, Monitor_Name
+               declare
+                  Args : constant Unbounded_String_Array :=
+                    Parse_Args (Msg.Msg_Body, 3);
+
+                  Workspace_Id : constant Hyprland_Workspace_Id :=
+                    Value (+(Args (1)));
+                  --  Workspace_Name not needed
+                  Monitor_Name : constant Unbounded_String      := Args (3);
+                  Monitor_Id   : constant Hyprland_Monitor_Id   :=
+                    Find_Monitor_Id (State, Monitor_Name);
+               begin
+                  Remove_Workspace_From_Monitor (State, Workspace_Id);
+                  Add_Workspace_To_Monitor (State, Workspace_Id, Monitor_Id);
+                  Updated := True;
                end;
 
             when Renameworkspace =>
@@ -389,16 +698,62 @@ package body Hyprland.State is
 
                begin
                   State.Workspaces (Workspace_Id).Name := New_Name;
+                  Updated                              := True;
                end;
 
             when Activespecial =>
                --  Workspace_Name, Monitor_Name
-               null;
-               --  Note: We intentionally don’t do anything with this
+               declare
+                  Args : constant Unbounded_String_Array :=
+                    Parse_Args (Msg.Msg_Body, 2);
+
+                  Workspace_Name : constant Unbounded_String := Args (1);
+                  Monitor_Name   : constant Unbounded_String := Args (2);
+
+                  Monitor_Id : constant Hyprland_Monitor_Id :=
+                    Find_Monitor_Id (State, Monitor_Name);
+               begin
+                  --  If enabling the special workspace
+                  if Workspace_Name /= Null_Unbounded_String then
+                     declare
+                        Workspace_Id : constant Hyprland_Workspace_Id :=
+                          Find_Workspace_Id (State, Workspace_Name);
+                     begin
+                        --  If the special workspace is still attached to
+                        --  an old monitor, remove it.
+                        --
+                        --  There are various edge cases where it would still
+                        --  be attached (e.g. switching between monitors while
+                        --  the overlay is open).
+
+                        if State.Workspaces (Workspace_Id).Monitor /=
+                          No_Monitor
+                        then
+                           Remove_Workspace_From_Monitor (State, Workspace_Id);
+                        end if;
+
+                        Add_Workspace_To_Monitor
+                          (State, Workspace_Id, Monitor_Id);
+
+                        State.Active_Workspace := Workspace_Id;
+                     end;
+                  else --  If returning to a normal workspace
+                     --  Orphan the special workspace
+                     Remove_Workspace_From_Monitor
+                       (State, State.Active_Workspace);
+
+                     --  Note: This code path is inefficient
+                     --  Hyprland doesn’t tell us what workspace is being
+                     --  activated when the special workspace is closed.
+                     --  Thus we must fetch that via Hypr1 (synchronous)
+                     State.Active_Workspace := Hypr1_Active_Workspace (State);
+                  end if;
+                  Updated := True;
+               end;
 
             when Activelayout =>
                --  Keyboard_Name, Layout_Name
-               null;
+               Updated := True;
                --  Note This is bugged in Hyprland right now, so
                --  we can’t actually use any of these messages.
                --  It’s still cause for a status update however.
@@ -416,33 +771,18 @@ package body Hyprland.State is
                   Window_Class   : constant Unbounded_String   := Args (3);
                   Window_Title   : constant Unbounded_String   := Args (4);
 
-                  Window : Hyprland_Window;
+                  Workspace_Id : constant Hyprland_Workspace_Id :=
+                    Find_Workspace_Id (State, Workspace_Name);
+
+                  Window : constant Hyprland_Window :=
+                    (Id          => Window_Id, Workspace => No_Workspace,
+                     Class       => Window_Class, Title => Window_Title,
+                     Title_Stale => False);
 
                begin
-                  Window.Id := Window_Id;
-
-                  --  Workspace_Id is not passed by Hypr2, so find
-                  --  the workspace by name
-
-                  for W of State.Workspaces loop
-                     if W.Name = Workspace_Name then
-                        Window.Workspace := W.Id;
-                        goto Found_Workspace;
-                     end if;
-                  end loop;
-                  raise Invalid_State
-                    with "Could not find workspace with ID " &
-                    (+Workspace_Name);
-                  <<Found_Workspace>>
-
-                  --  Workspace found, fill in the remaining fields
-                  Window.Class := Window_Class;
-                  Window.Title := Window_Title;
-
-                  --  Finally add the window to the global list
                   State.Windows.Insert (Window_Id, Window);
-                  State.Workspaces (Window.Workspace).Windows.Append
-                    (Window_Id);
+                  Add_Window_To_Workspace (State, Window_Id, Workspace_Id);
+                  Updated := True;
                end;
 
             when Closewindow =>
@@ -462,6 +802,7 @@ package body Hyprland.State is
                   State.Windows.Delete (Window_Id);
 
                   State.Active_Window := No_Window;
+                  Updated             := True;
                end;
 
             when Movewindowv2 =>
@@ -474,21 +815,10 @@ package body Hyprland.State is
                     Value ("16#" & (+(Args (1))) & "#");
                   Workspace_Id : constant Hyprland_Workspace_Id  :=
                     Value (+(Args (2)));
-
-                  Relevant_Workspace :
-                    Hyprland_Workspace renames
-                    State.Workspaces (State.Windows (Window_Id).Workspace);
-
                begin
-                  Relevant_Workspace.Windows.Delete
-                    (Relevant_Workspace.Windows.Find_Index (Window_Id));
-
-                  State.Windows (Window_Id).Workspace := Workspace_Id;
-                  State.Workspaces (Workspace_Id).Windows.Append (Window_Id);
-
-                  --  TODO: This event has caused crashes before. Try to
-                  --  identify the source of the desync. Log analysis was
-                  --  inconclusive in a recent cause.
+                  Remove_Window_From_Workspace (State, Window_Id);
+                  Add_Window_To_Workspace (State, Window_Id, Workspace_Id);
+                  Updated := True;
                end;
 
             when Windowtitle =>
@@ -501,7 +831,6 @@ package body Hyprland.State is
                begin
                   --  This event provides no actual data, just metadata
                   --  about an upcoming `Activewindow` event
-                  Updated := False;
 
                   --  If the window already exists, set a flag so that the next
                   --  `Activewindow` and `Activewindowv2` call chain will cause
@@ -512,12 +841,15 @@ package body Hyprland.State is
                end;
 
             when others =>
-               --  A command that we don’t need to handle for whatever reason
-               Updated := False;
+               null;
          end case;
       end loop;
 
       return Updated;
+   exception
+      when X : others =>
+         Put_Debug (State'Image);
+         Ada.Exceptions.Reraise_Occurrence (X);
    end Update;
 
    ------------------------
