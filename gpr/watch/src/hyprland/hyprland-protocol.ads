@@ -22,7 +22,7 @@ package Hyprland.Protocol is
    --  Types  --
    -------------
 
-   type Hyprland_Connection is limited private;
+   type Hyprland_Connection is tagged limited private;
    --  The base Hyprland object. `Connect` to the compositor to use it and
    --  `Disconnect` when done.
 
@@ -74,7 +74,7 @@ package Hyprland.Protocol is
    --  Returns Hypr1's response
 
 private
-   type Hyprland_Connection is limited record
+   type Hyprland_Connection is tagged limited record
       Valid : Boolean := False;
 
       --  Socket1 needs to be opened every time it is used

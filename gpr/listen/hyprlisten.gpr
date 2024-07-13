@@ -7,7 +7,7 @@ project hyprlisten is
    for Main use ("hyprlisten.adb");
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-gnatwa", "-gnatwe", "-gnatyy", "-fvisibility=hidden", "-O3", "-gnatp", "-ffast-math");
+      for Default_Switches ("Ada") use ("-gnatwa", "-gnatwe", "-gnatyy", "-O3", "-gnatp", "-ffast-math");
    end Compiler;
 
    package Binder is

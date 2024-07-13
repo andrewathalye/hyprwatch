@@ -1,3 +1,5 @@
+pragma Restrictions (No_Elaboration_Code);
+
 with D_Bus.Connection.Dispatch;
 
 with Callback;

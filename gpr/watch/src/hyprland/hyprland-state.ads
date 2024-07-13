@@ -61,7 +61,7 @@ package Hyprland.State is
    ----------------
    -- State Type --
    ----------------
-   type Hyprland_State is tagged private;
+   type Hyprland_State is tagged limited private;
 
    type Hyprland_State_Access is access all Hyprland_State;
 
@@ -127,13 +127,10 @@ package Hyprland.State is
    procedure Disconnect (State : in out Hyprland_State);
    --  Disconnect from a Hyprland instance and destroy state information.
 
-   function Connection
-     (State : in out Hyprland_State)
-      return access Hyprland.Protocol.Hyprland_Connection;
-   --  Return the underlying connection.
-   --  Note that any modification of this connection might result
-   --  in undefined behaviour should `Hyprland.State` continue
-   --  to be used.
+   function File_Descriptor (State : Hyprland_State) return Integer;
+   --  Return a file descriptor associated with `State` to be polled
+   --  for Hyprland updates. Reading or writing from the resulting
+   --  descriptor is undefined behaviour.
 
    function Update (State : in out Hyprland_State) return Boolean;
    --  Update a `Hyprland_State` object using fresh data from the compositor.
@@ -155,11 +152,8 @@ package Hyprland.State is
    --  TODO this is currently global across all keyboards
 
 private
-   type HCA is access Protocol.Hyprland_Connection;
-
-   type Hyprland_State is tagged record
-      Valid      : Boolean := False;
-      Connection : HCA;
+   type Hyprland_State is new Protocol.Hyprland_Connection with record
+      Valid : Boolean := False;
 
       Monitors   : Hyprland_Monitor_List;
       Workspaces : Hyprland_Workspace_List;

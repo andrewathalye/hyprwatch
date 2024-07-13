@@ -1,5 +1,3 @@
-pragma Ada_2022;
-
 with D_Bus.Connection.G_Main;
 with D_Bus.Types;
 use type D_Bus.Types.Obj_Path;

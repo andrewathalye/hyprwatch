@@ -1,7 +1,6 @@
 pragma Ada_2022;
 
 with Ada.Exceptions;
-with Ada.Unchecked_Deallocation;
 
 with GNATCOLL.JSON;
 with Hyprland.State;
@@ -10,12 +9,6 @@ with String_Utils;
 with Debug; use Debug;
 
 package body Hyprland.State is
-   --  Intentionally blank Hyprland_State
-   Blank_State : constant Hyprland_State := (others => <>);
-
-   procedure Deallocate is new Ada.Unchecked_Deallocation
-     (Object => Protocol.Hyprland_Connection, Name => HCA);
-
    function "+"
      (Item : Ada.Strings.Unbounded.Unbounded_String) return String renames
      Ada.Strings.Unbounded.To_String;
@@ -180,8 +173,7 @@ package body Hyprland.State is
       use GNATCOLL.JSON;
       use Hyprland.State_Impl;
 
-      AW      : constant String     :=
-        Protocol.Send_Message (State.Connection.all, Activeworkspace);
+      AW      : constant String     := State.Send_Message (Activeworkspace);
       AW_JSON : constant JSON_Value := Read (AW);
    begin
       return Value (Integer'(AW_JSON.Get ("monitorID"))'Image);
@@ -195,8 +187,7 @@ package body Hyprland.State is
       use GNATCOLL.JSON;
       use Hyprland.State_Impl;
 
-      AW      : constant String     :=
-        Protocol.Send_Message (State.Connection.all, Activeworkspace);
+      AW      : constant String     := State.Send_Message (Activeworkspace);
       AW_JSON : constant JSON_Value := Read (AW);
    begin
       return Value (Integer'(AW_JSON.Get ("id"))'Image);
@@ -213,8 +204,7 @@ package body Hyprland.State is
       use GNATCOLL.JSON;
       use Hyprland.State_Impl;
 
-      M      : constant String     :=
-        Protocol.Send_Message (State.Connection.all, Monitors);
+      M      : constant String     := State.Send_Message (Monitors);
       M_JSON : constant JSON_Value := Read (M);
    begin
       pragma Assert (Monitor /= No_Monitor);
@@ -269,8 +259,7 @@ package body Hyprland.State is
          raise Invalid_State with "Hyprland State already Connected.";
       end if;
 
-      State.Connection := new Protocol.Hyprland_Connection;
-      Protocol.Connect (State.Connection.all);
+      Protocol.Hyprland_Connection (State).Connect;
 
       ---------------------
       --  Initial State  --
@@ -283,9 +272,7 @@ package body Hyprland.State is
       declare
          use GNATCOLL.JSON;
 
-         M      : constant String     :=
-           Protocol.Send_Message
-             (Hypr => State.Connection.all, Id => Monitors);
+         M      : constant String     := State.Send_Message (Monitors);
          M_JSON : constant JSON_Value := Read (M);
       begin
          for Object of JSON_Array'(M_JSON.Get) loop
@@ -306,9 +293,7 @@ package body Hyprland.State is
       declare
          use GNATCOLL.JSON;
 
-         W      : constant String     :=
-           Protocol.Send_Message
-             (Hypr => State.Connection.all, Id => Workspaces);
+         W      : constant String     := State.Send_Message (Workspaces);
          W_JSON : constant JSON_Value := Read (W);
 
       begin
@@ -337,9 +322,7 @@ package body Hyprland.State is
          use GNATCOLL.JSON;
          use Hyprland.State_Impl;
 
-         W      : constant String     :=
-           Protocol.Send_Message
-             (Hypr => State.Connection.all, Id => Activeworkspace);
+         W      : constant String     := State.Send_Message (Activeworkspace);
          W_JSON : constant JSON_Value := Read (W);
 
       begin
@@ -357,8 +340,7 @@ package body Hyprland.State is
          use GNATCOLL.JSON;
          use Hyprland.State_Impl;
 
-         W      : constant String     :=
-           Protocol.Send_Message (Hypr => State.Connection.all, Id => Clients);
+         W      : constant String     := State.Send_Message (Clients);
          W_JSON : constant JSON_Value := Read (W);
 
       begin
@@ -378,7 +360,7 @@ package body Hyprland.State is
             begin
                Window.Id        := Id;
                Window.Workspace :=
-                 Value (Integer'(Object.Get ("workspace").Get ("id"))'Image);
+                 Value (Integer'Image (Object.Get ("workspace").Get ("id")));
                Window.Class     := Object.Get ("class");
                Window.Title     := Object.Get ("title");
 
@@ -394,9 +376,7 @@ package body Hyprland.State is
          use GNATCOLL.JSON;
          use Hyprland.State_Impl;
 
-         W      : constant String     :=
-           Protocol.Send_Message
-             (Hypr => State.Connection.all, Id => Activewindow);
+         W      : constant String     := State.Send_Message (Activewindow);
          W_JSON : constant JSON_Value := Read (W);
 
       begin
@@ -430,20 +410,19 @@ package body Hyprland.State is
 
    procedure Disconnect (State : in out Hyprland_State) is
    begin
-      Protocol.Disconnect (State.Connection.all);
-      Deallocate (State.Connection);
+      if not State.Valid then
+         raise Invalid_State;
+      end if;
+
+      Protocol.Hyprland_Connection (State).Disconnect;
 
       --  Intentionally wipe state
-      State := Blank_State;
+      --  TODO fix
+      State.Valid := False;
    end Disconnect;
 
-   ----------------
-   -- Connection --
-   ----------------
-   function Connection
-     (State : in out Hyprland_State)
-      return access Hyprland.Protocol.Hyprland_Connection is
-     (State.Connection);
+   function File_Descriptor (State : Hyprland_State) return Integer is
+     (Protocol.Hyprland_Connection (State).File_Descriptor);
 
    ------------
    -- Update --
@@ -462,8 +441,12 @@ package body Hyprland.State is
       Updated : Boolean := False;
 
    begin
-      while Protocol.Has_Messages (State.Connection.all) loop
-         Msg := Protocol.Receive_Message (State.Connection.all);
+      if not State.Valid then
+         raise Invalid_State;
+      end if;
+
+      while State.Has_Messages loop
+         Msg := State.Receive_Message;
 
          Put_Debug (Msg.Msg_Id'Image & ": " & (+Msg.Msg_Body));
 
@@ -853,8 +836,8 @@ package body Hyprland.State is
    is
 
       Result : constant String :=
-        Hyprland.Protocol.Send_Message
-          (Hypr      => State.Connection.all, Id => Dispatch,
+        State.Send_Message
+          (Id        => Dispatch,
            Arguments =>
              "workspace " &
              String_Utils.Strip_Spaces
@@ -876,8 +859,8 @@ package body Hyprland.State is
    is
 
       Result : constant String :=
-        Hyprland.Protocol.Send_Message
-          (Hypr      => State.Connection.all, Id => Dispatch,
+        State.Send_Message
+          (Id        => Dispatch,
            Arguments =>
              "movetoworkspace " &
              String_Utils.Strip_Spaces
@@ -898,13 +881,11 @@ package body Hyprland.State is
       Variant :        String)
    is
       Result : constant String :=
-        Hyprland.Protocol.Send_Unchecked
-          (Hypr    => State.Connection.all,
-           Command =>
-             "[[BATCH]]" & "j/keyword input:kb_variant  , ;" &
-             "j/keyword input:kb_layout us," & Layout & ";" &
-             "j/keyword input:kb_variant  ," & Variant & ";" &
-             "j/switchxkblayout " & Keyboard & " 1");
+        State.Send_Unchecked
+          ("[[BATCH]]" & "j/keyword input:kb_variant  , ;" &
+           "j/keyword input:kb_layout us," & Layout & ";" &
+           "j/keyword input:kb_variant  ," & Variant & ";" &
+           "j/switchxkblayout " & Keyboard & " 1");
    begin
       --  The result should be four 'ok's separated by three LFs each
       --!pp off

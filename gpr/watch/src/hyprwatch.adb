@@ -1,11 +1,8 @@
-pragma Ada_2022;
-
 with D_Bus.G_Main;
 
 with Glib.Main;
 with Glib.IOChannel;
 
-with Hyprland.Protocol;
 with Hyprland.State;
 
 with D_Bus_Helpers;
@@ -40,8 +37,7 @@ begin
    --  Glib
    Hypr_Channel :=
      Glib.IOChannel.Giochannel_Unix_New
-       (Glib.Gint
-          (Hyprland.Protocol.File_Descriptor (Hypr_State.Connection.all)));
+       (Glib.Gint (Hypr_State.File_Descriptor));
 
    --  Note: Had we used Glib.IOChannel.Create_Watch, the resulting
    --  G_Source would have required a non-existent GIO_Source_Func type

@@ -1,5 +1,3 @@
-pragma Ada_2022;
-
 with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Characters.Handling;
@@ -12,18 +10,6 @@ package body Hyprland.Protocol is
    function "+"
      (Source : Ada.Strings.Unbounded.Unbounded_String) return String renames
      Ada.Strings.Unbounded.To_String;
-
-   --------------------
-   --  Assert_Valid  --
-   --------------------
-   procedure Assert_Valid (Hypr : Hyprland_Connection);
-
-   procedure Assert_Valid (Hypr : Hyprland_Connection) is
-   begin
-      if not Hypr.Valid then
-         raise Invalid_Connection with "Hyprland connection not valid.";
-      end if;
-   end Assert_Valid;
 
    ---------------------------------
    --  Get_Hypr_Socket_Base_Path  --
@@ -69,8 +55,7 @@ package body Hyprland.Protocol is
 
    begin
       if Hypr.Valid then
-         raise Invalid_Connection
-           with "Hyprland socket was already connected when Connect called!";
+         raise Invalid_Connection;
       end if;
 
       GNAT.Sockets.Create_Socket (Hypr.Socket2, GNAT.Sockets.Family_Unix);
@@ -93,7 +78,9 @@ package body Hyprland.Protocol is
 
    procedure Disconnect (Hypr : in out Hyprland_Connection) is
    begin
-      Assert_Valid (Hypr);
+      if not Hypr.Valid then
+         raise Invalid_Connection;
+      end if;
 
       Hypr.Valid := False;
       GNAT.Sockets.Close_Socket (Hypr.Socket2);
@@ -106,7 +93,10 @@ package body Hyprland.Protocol is
 
    function File_Descriptor (Hypr : Hyprland_Connection) return Integer is
    begin
-      Assert_Valid (Hypr);
+      if not Hypr.Valid then
+         raise Invalid_Connection;
+      end if;
+
       return GNAT.Sockets.To_C (Hypr.Socket2);
    end File_Descriptor;
 
@@ -124,7 +114,9 @@ package body Hyprland.Protocol is
       Status : GNAT.Sockets.Selector_Status;
 
    begin
-      Assert_Valid (Hypr);
+      if not Hypr.Valid then
+         raise Invalid_Connection;
+      end if;
 
       --  Note: This has to be done here instead of globally for some reason
       GNAT.Sockets.Set (Read_Socket_Set, Hypr.Socket2);
@@ -153,7 +145,9 @@ package body Hyprland.Protocol is
       Buf : Character;
 
    begin
-      Assert_Valid (Hypr);
+      if not Hypr.Valid then
+         raise Invalid_Connection;
+      end if;
 
       Character'Read (Hypr.Stream2, Buf);
 
@@ -185,8 +179,6 @@ package body Hyprland.Protocol is
    function Send_Unchecked
      (Hypr : in out Hyprland_Connection; Command : String) return String
    is
-      pragma Unreferenced (Hypr);
-
       use GNAT.Sockets;
 
       Buf    : Ada.Strings.Unbounded.Unbounded_String;
@@ -194,6 +186,11 @@ package body Hyprland.Protocol is
       Stream : GNAT.Sockets.Stream_Access;
 
    begin
+      --  For the sake of semantics
+      if not Hypr.Valid then
+         raise Invalid_Connection;
+      end if;
+
       --  Open Hypr1 for reading / writing
       --  Note: This socket automatically closes after a command is issued.
       Create_Socket (Socket, Family_Unix);
