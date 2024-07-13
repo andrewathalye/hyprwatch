@@ -1,3 +1,7 @@
 /hyprwatch
 /hyprlisten
 /obj
+
+*~
+*.swp
+*.swo

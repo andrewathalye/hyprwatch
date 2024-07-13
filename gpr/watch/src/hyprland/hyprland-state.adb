@@ -559,7 +559,10 @@ package body Hyprland.State is
                     Find_Monitor_Id (State, Monitor_Name);
                begin
                   --  Clear data for workspaces which were on that monitor
-                  --  These will be updated after a `Focusedmon`
+                  --  These will be updated after a `Focusedmon` or
+                  --  `Moveworkspacv2` (Note: if multiple workspaces were
+                  --  on a monitor which was removed, it is random which of
+                  --  these will be officially focused on remaining monitors)
                   for WS of State.Workspaces loop
                      if WS.Monitor = Monitor_Id then
                         WS.Monitor := No_Monitor;
@@ -664,7 +667,11 @@ package body Hyprland.State is
                   Monitor_Id   : constant Hyprland_Monitor_Id   :=
                     Find_Monitor_Id (State, Monitor_Name);
                begin
-                  Remove_Workspace_From_Monitor (State, Workspace_Id);
+                  --  If the workspace wasn’t orphaned
+                  if State.Workspaces (Workspace_Id).Monitor /= No_Monitor then
+                     Remove_Workspace_From_Monitor (State, Workspace_Id);
+                  end if;
+
                   Add_Workspace_To_Monitor (State, Workspace_Id, Monitor_Id);
                   Updated := True;
                end;
