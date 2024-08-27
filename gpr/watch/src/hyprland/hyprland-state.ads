@@ -94,7 +94,6 @@ package Hyprland.State is
       Workspace   : Hyprland_Workspace_Id := No_Workspace;
       Class       : Ada.Strings.Unbounded.Unbounded_String;
       Title       : Ada.Strings.Unbounded.Unbounded_String;
-      Title_Stale : Boolean               := False;
    end record;
 
    package Hyprland_Window_Lists is new Ada.Containers.Ordered_Maps

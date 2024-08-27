@@ -528,21 +528,13 @@ package body Hyprland.State is
                         Window_Id := Hyprland.State.No_Window;
                   end;
 
-                  --  Update the class and title if the window was marked stale
-                  --  Skip this if the Openwindow event has not yet been fired.
-
                   if State.Windows.Contains (Window_Id) then
                      --  Update the workspace
                      State.Active_Workspace :=
                        State.Windows (Window_Id).Workspace;
 
-                     --  Update stale titles
-                     if State.Windows (Window_Id).Title_Stale then
-                        State.Windows (Window_Id).Class := Active_Class;
-                        State.Windows (Window_Id).Title := Active_Title;
-
-                        State.Windows (Window_Id).Title_Stale := False;
-                     end if;
+                     State.Windows (Window_Id).Class := Active_Class;
+                     State.Windows (Window_Id).Title := Active_Title;
                   end if;
 
                   State.Active_Window := Window_Id;
@@ -758,8 +750,7 @@ package body Hyprland.State is
 
                   Window : constant Hyprland_Window :=
                     (Id          => Window_Id, Workspace => No_Workspace,
-                     Class       => Window_Class, Title => Window_Title,
-                     Title_Stale => False);
+                     Class       => Window_Class, Title => Window_Title);
 
                begin
                   State.Windows.Insert (Window_Id, Window);
@@ -803,22 +794,20 @@ package body Hyprland.State is
                   Updated := True;
                end;
 
-            when Windowtitle =>
-               --  Window_Address
+            when Windowtitlev2 =>
+               --  Window_Address, Window_Title
                declare
 
+                  Args : constant Unbounded_String_Array :=
+                     Parse_Args (Msg.Msg_Body, 2);
                   Window_Id : constant Hyprland_Window_Id :=
-                    Value ("16#" & (+Msg.Msg_Body) & "#");
+                       Value ("16#" & (+Args (1)) & "#");
+                  Window_Title : Unbounded_String renames Args (2);
 
                begin
-                  --  This event provides no actual data, just metadata
-                  --  about an upcoming `Activewindow` event
-
-                  --  If the window already exists, set a flag so that the next
-                  --  `Activewindow` and `Activewindowv2` call chain will cause
-                  --  the title to be updated.
+                  --  If the window already exists, set its title
                   if State.Windows.Contains (Window_Id) then
-                     State.Windows (Window_Id).Title_Stale := True;
+                     State.Windows (Window_Id).Title := Window_Title;
                   end if;
                end;
 
