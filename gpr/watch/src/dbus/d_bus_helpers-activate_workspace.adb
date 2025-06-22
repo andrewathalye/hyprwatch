@@ -4,6 +4,9 @@ with D_Bus.Arguments.Containers;
 with D_Bus_Helpers.Impl; use D_Bus_Helpers.Impl;
 with Hypr_Helpers;
 
+with Hyprland.State;
+use type Hyprland.State.Hyprland_Workspace_Id;
+
 with Debug; use Debug;
 
 procedure D_Bus_Helpers.Activate_Workspace

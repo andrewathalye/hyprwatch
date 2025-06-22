@@ -1,0 +1,13 @@
+Fix crash due to "unsafe state" @ ActiveWorkspace
+> if there are no monitors, we can’t call ActiveWorkspace
+
+Fix crash due to monitor being removed and then ws moved to it before recreated
+> probably related?
+
+redo monitor handling:
+Monitors : List => Active_Workspace : X
+
+Workspace is not assoc. with monitor
+
+Keyboard Variant is unnecessary and should be removed (not provided by Hyprland)
+Keyboard protocol no longer works with Aquamarine

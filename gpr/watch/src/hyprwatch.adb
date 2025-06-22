@@ -21,6 +21,7 @@ procedure hyprwatch is
 
    Hypr_Channel : Glib.IOChannel.Giochannel;
    Discard      : Glib.Main.G_Source_Id;
+   DiscardB : Boolean;
 begin
    Put_Debug ("Starting hyprwatch");
 

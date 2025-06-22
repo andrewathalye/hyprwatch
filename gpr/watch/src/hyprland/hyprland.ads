@@ -17,12 +17,13 @@ package Hyprland is
       Instances, Layouts, Configerrors, Rollinglog, Locked);
 
    type Hypr2_Message_Id is
-     (Workspace, Workspacev2, Focusedmon, Activewindow, Activewindowv2,
-      Fullscreen, Monitorremoved, Monitoradded, Monitoraddedv2,
-      Createworkspace, Createworkspacev2, Destroyworkspace, Destroyworkspacev2,
-      Moveworkspace, Moveworkspacev2, Renameworkspace, Activespecial,
-      Activelayout, Openwindow, Closewindow, Movewindow, Movewindowv2,
-      Openlayer, Closelayer, Submap, Changefloatingmode, Urgent, Minimize,
-      Screencast, Windowtitle, Windowtitlev2, Togglegroup, Moveintogroup,
-      Moveoutofgroup, Ignoregrouplock, Lockgroups, Configreloaded, Pin);
+     (Workspace, Workspacev2, Focusedmon, Focusedmonv2, Activewindow,
+      Activewindowv2, Fullscreen, Monitorremoved, Monitorremovedv2,
+      Monitoradded, Monitoraddedv2, Createworkspace, Createworkspacev2,
+      Destroyworkspace, Destroyworkspacev2, Moveworkspace, Moveworkspacev2,
+      Renameworkspace, Activespecial, Activespecialv2, Activelayout,
+      Openwindow, Closewindow, Movewindow, Movewindowv2, Openlayer,
+      Closelayer, Submap, Changefloatingmode, Urgent, Screencast,
+      Windowtitle, Windowtitlev2, Togglegroup, Moveintogroup, Moveoutofgroup,
+      Ignoregrouplock, Lockgroups, Configreloaded, Pin, Minimized, Bell);
 end Hyprland;

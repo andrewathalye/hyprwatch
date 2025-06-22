@@ -28,6 +28,7 @@ package body Glib_Helpers is
       Has_Updates : Boolean;
 
    begin
+      Put_Debug ("Hypr Source Callback");
       Has_Updates := Data.Update;
 
       if Has_Updates then

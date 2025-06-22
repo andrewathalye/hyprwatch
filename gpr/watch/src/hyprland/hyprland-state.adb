@@ -451,6 +451,10 @@ package body Hyprland.State is
          Put_Debug (Msg.Msg_Id'Image & ": " & (+Msg.Msg_Body));
 
          case Msg.Msg_Id is
+            when Workspace =>
+               --  Just Workspace_Name
+               null;
+
             when Workspacev2 =>
                --  Workspace_Id, Workspace_Name
                declare
@@ -467,6 +471,11 @@ package body Hyprland.State is
 
             when Focusedmon =>
                --  Monitor_Name, Workspace_Name
+               --  UNUSED
+               null;
+
+            when Focusedmonv2 =>
+               --  Monitor_Name, Workspace_Id
                --  Note: Hyprland currently does not return info
                --  about selected special workspaces. It is not
                --  practical to retrieve this without a worst-case
@@ -541,14 +550,20 @@ package body Hyprland.State is
                   Updated             := True;
                end;
 
+            when Fullscreen =>
+               --  0 / 1
+               null;
+
             when Monitorremoved =>
                --  Monitor_Name
+               null;
+            when Monitorremovedv2 =>
+               --  Monitor_Id, Monitor_Name,Monitor_Description
                declare
                   Args         : constant Unbounded_String_Array :=
-                    Parse_Args (Msg.Msg_Body, 1);
-                  Monitor_Name : constant Unbounded_String       := Args (1);
-                  Monitor_Id   : constant Hyprland_Monitor_Id    :=
-                    Find_Monitor_Id (State, Monitor_Name);
+                    Parse_Args (Msg.Msg_Body, 3);
+                  Monitor_Id   : constant Hyprland_Monitor_Id    := Value
+                    (To_String (Args (1)));
                begin
                   --  Clear data for workspaces which were on that monitor
                   --  These will be updated after a `Focusedmon` or
@@ -564,6 +579,10 @@ package body Hyprland.State is
                   State.Monitors.Delete (Monitor_Id);
                   Updated := True;
                end;
+
+            when Monitoradded =>
+               --  Monitor_Name
+               null;
 
             when Monitoraddedv2 =>
                --  Monitor_Id, Monitor_Name, Monitor_Description
@@ -586,6 +605,10 @@ package body Hyprland.State is
                         Workspaces => []));
                   Updated := True;
                end;
+
+            when Createworkspace =>
+               --  Workspace_Name
+               null;
 
             when Createworkspacev2 =>
                --  Workspace_Id, Workspace_Name
@@ -611,6 +634,9 @@ package body Hyprland.State is
                   Updated := True;
                end;
 
+            when Destroyworkspace =>
+               --  Workspace_Name
+               null;
             when Destroyworkspacev2 =>
                --  Workspace_Id, Workspace_Name
                declare
@@ -646,6 +672,9 @@ package body Hyprland.State is
                   Updated := True;
                end;
 
+            when Moveworkspace =>
+               --  Workspace_Name, Monitor_Name
+               null;
             when Moveworkspacev2 =>
                --  Workspace_Id, Workspace_Name, Monitor_Name
                declare
@@ -685,21 +714,24 @@ package body Hyprland.State is
 
             when Activespecial =>
                --  Workspace_Name, Monitor_Name
+               null;
+            when Activespecialv2 =>
+               --  Workspace_Id, Workspace_Name, Monitor_Name
                declare
                   Args : constant Unbounded_String_Array :=
-                    Parse_Args (Msg.Msg_Body, 2);
+                    Parse_Args (Msg.Msg_Body, 3);
 
-                  Workspace_Name : constant Unbounded_String := Args (1);
-                  Monitor_Name   : constant Unbounded_String := Args (2);
+                  U_Workspace_Id   : constant Unbounded_String := Args (1);
+                  Monitor_Name   : constant Unbounded_String := Args (3);
 
                   Monitor_Id : constant Hyprland_Monitor_Id :=
                     Find_Monitor_Id (State, Monitor_Name);
                begin
                   --  If enabling the special workspace
-                  if Workspace_Name /= Null_Unbounded_String then
+                  if U_Workspace_Id /= Null_Unbounded_String then
                      declare
                         Workspace_Id : constant Hyprland_Workspace_Id :=
-                          Find_Workspace_Id (State, Workspace_Name);
+                          Value (To_String (U_Workspace_Id));
                      begin
                         --  If the special workspace is attached to
                         --  an old monitor, remove it.
@@ -778,6 +810,9 @@ package body Hyprland.State is
                   Updated             := True;
                end;
 
+            when Movewindow =>
+               --  Window_ADdress, Workspace_Name
+               null;
             when Movewindowv2 =>
                --  Window_Address, Workspace_Id, Workspace_Name
                declare
@@ -793,6 +828,35 @@ package body Hyprland.State is
                   Add_Window_To_Workspace (State, Window_Id, Workspace_Id);
                   Updated := True;
                end;
+
+            when Openlayer =>
+               --  Namespace
+               null;
+
+            when Closelayer =>
+               --  Namespace
+               null;
+
+            when Submap =>
+               --  Submap_Name
+               null;
+
+            when Changefloatingmode =>
+               --  Window_Address, Floating(0/1)
+               null;
+
+            when Urgent =>
+               --  Window_Address
+               --  TODO
+               null;
+
+            when Screencast =>
+               --  State(0/1), Owner(0/1)
+               null;
+
+            when Windowtitle =>
+               --  Window_Address
+               null;
 
             when Windowtitlev2 =>
                --  Window_Address, Window_Title
@@ -811,7 +875,26 @@ package body Hyprland.State is
                   end if;
                end;
 
-            when others =>
+            when Togglegroup | Moveintogroup | Moveoutofgroup
+               | Ignoregrouplock | Lockgroups =>
+               --  0/1, Window_Address LIST
+               --  Window_ADdress
+               --  Window_Address
+               --  0/1
+               --  0/1
+               null;
+
+            when Configreloaded =>
+               --  Nothing
+               null;
+            when Pin =>
+               --  Window_Address, Pin_State
+               null;
+            when Minimized =>
+               --  Window_Address, 0/1
+               null;
+            when Bell =>
+               --  Window_Address
                null;
          end case;
       end loop;
@@ -830,19 +913,25 @@ package body Hyprland.State is
    procedure Activate_Workspace
      (State : in out Hyprland_State; Workspace : Hyprland_Workspace_Id)
    is
-
-      Result : constant String :=
-        State.Send_Message
-          (Id        => Dispatch,
-           Arguments =>
-             "workspace " &
-             String_Utils.Strip_Spaces
-               (Hyprland.State_Impl.Image (Workspace)));
-
    begin
-      if Result /= "ok" then
-         raise Request_Failed with Result;
+      if State.Active_Workspace = Workspace then
+         Put_Debug ("Cannot switch to active workspace");
+         return;
       end if;
+
+      declare
+         Result : constant String :=
+           State.Send_Message
+             (Id        => Dispatch,
+              Arguments =>
+                "workspace " &
+                String_Utils.Strip_Spaces
+                  (Hyprland.State_Impl.Image (Workspace)));
+      begin
+         if Result /= "ok" then
+            raise Request_Failed with Result;
+         end if;
+      end;
    end Activate_Workspace;
 
    -----------------

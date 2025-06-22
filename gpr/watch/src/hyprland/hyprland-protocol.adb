@@ -69,6 +69,7 @@ package body Hyprland.Protocol is
 
       GNAT.Sockets.Create_Selector (Hypr.Selector);
 
+      Put_Debug ("Connected to Hypr2 Socket");
       Hypr.Valid := True;
    end Connect;
 
